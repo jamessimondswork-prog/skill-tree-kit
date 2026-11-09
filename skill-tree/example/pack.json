@@ -1,0 +1,1153 @@
+{
+ "topic": {
+  "title": "Spreadsheet formulas on team expenses",
+  "stat": "example-formulas",
+  "statName": "Spreadsheet formulas (example)",
+  "area": "job",
+  "category": "spreadsheets",
+  "project": "A quarter-end expenses summary in Excel or Google Sheets that fills itself in, turned into a template for the team",
+  "sourceUrl": "https://support.google.com/docs/table/25273",
+  "sourceTitle": "Spreadsheet function help (Microsoft Support and Google Docs Editors Help)",
+  "sourceLength": "Reference docs; 6 quests, about 3 hours",
+  "sources": [
+   {
+    "title": "Microsoft Support: SUM function",
+    "url": "https://support.microsoft.com/en-us/office/sum-function-043e1c7d-7726-4e80-8f32-07b23e057f89",
+    "addedOn": "2026-01-05"
+   },
+   {
+    "title": "Microsoft Support: SUMIFS function",
+    "url": "https://support.microsoft.com/en-us/office/sumifs-function-c9e748f5-7ea7-455d-9406-611cebce642b",
+    "addedOn": "2026-01-05"
+   },
+   {
+    "title": "Google Docs Editors Help: Google Sheets function list",
+    "url": "https://support.google.com/docs/table/25273",
+    "addedOn": "2026-01-05"
+   }
+  ],
+  "dataSource": "Made-up team expenses for one quarter (Jan-Mar 2026), written by gen_pack.py in this folder with a fixed seed. Not real data. The learner opens team-expenses.csv in their own spreadsheet.",
+  "status": "offered",
+  "createdOn": null,
+  "fromRole": true,
+  "gapId": "spreadsheet-formulas",
+  "placementStart": 1,
+  "placement": {
+   "1": [
+    "q1",
+    "q2"
+   ],
+   "2": [
+    "q3"
+   ],
+   "3": [
+    "q4"
+   ]
+  },
+  "guide": {
+   "npc": "mentor",
+   "offer": {
+    "title": "The Expenses Ledger",
+    "pitch": "Most spreadsheets get added up by hand, one row at a time. Let's change that. We'll take one made-up quarter of team expenses and, by the end, you'll build a summary that fills itself in, then use the same formulas on a task of your own.",
+    "reward": [
+     "New skill: spreadsheet formulas, with Rank Trials up to Competent (3/7)",
+     "Project: a quarter-end expenses summary that updates itself",
+     "A reusable template with notes for your team"
+    ],
+    "effort": "6 quests, about 3 hours",
+    "ceiling": "Competent (3/7)",
+    "note": "Done in your own Excel or Google Sheets. The page checks the values your formulas return."
+   },
+   "lines": {
+    "accept": "Good. Quest 1 is short: we open the sheet and look before we add anything up.",
+    "hello": "Here's the quarter's expenses. Let's see what's in them.",
+    "back": [
+     "Welcome back. Your sheet's where you left it.",
+     "Good to see you. One quest at a time.",
+     "Back again. That's how this sticks."
+    ],
+    "step": [
+     "Say the question in plain words first. Then the formula.",
+     "Check your range starts at row 2.",
+     "Small formula first. Build it up."
+    ],
+    "pass": [
+     "That's it. Exactly the number.",
+     "Clean. On to the next.",
+     "Right first time. Nice work."
+    ],
+    "fail": [
+     "Close. Check your range covers every row.",
+     "Not yet. Check the spelling inside your quotes.",
+     "Look at the order of the parts in your formula."
+    ],
+    "quiz": "Three questions. Two to pass. Think about the situation, not the function name.",
+    "boss": "Boss fight. The team lead wants the quarter-end summary. Everything you've learned, all at once.",
+    "done": "Summary built and template shared. You turned a raw export into something your team can reuse.",
+    "combo": [
+     "Three in a row, first time.",
+     "You're on a roll. Keep it steady.",
+     "Every one first time. Impressive."
+    ]
+   }
+  },
+  "mission": {
+   "why": "Answer everyday questions from a spreadsheet with formulas, instead of adding things up by hand.",
+   "success": [
+    "Open a CSV in your own spreadsheet and fix messy values before using it",
+    "Write SUM, AVERAGE, COUNTIF, SUMIFS and IF from a blank cell to answer a plain-English question",
+    "Build a summary grid that fills itself in when the data changes",
+    "Pass the Competent (3/7) Rank Trial"
+   ],
+   "constraints": "Sessions of 20-30 minutes in Excel or Google Sheets. Made-up data only.",
+   "outOfScope": "Lookups, pivot tables and charts come in a later topic."
+  },
+  "trophies": [
+   {
+    "id": "ex-clean-sweep",
+    "ch": 1,
+    "name": "The Clean Sweep",
+    "art": "rake",
+    "need": "Clear \"Open the expenses sheet\".",
+    "lore": "You read the export before anyone asked. The typo didn't stand a chance.",
+    "when": {
+     "quest": "q1"
+    }
+   },
+   {
+    "id": "ex-counting-stones",
+    "ch": 2,
+    "name": "The Counting Stones",
+    "art": "stones",
+    "need": "Clear \"Totals and averages\".",
+    "lore": "Sixty claims, and you knew the whole quarter in four formulas.",
+    "when": {
+     "quest": "q2"
+    }
+   },
+   {
+    "id": "ex-sharp-eye",
+    "ch": 2,
+    "name": "Lens of Criteria",
+    "art": "lens",
+    "need": "Clear \"Count and add with conditions\".",
+    "lore": "You only counted what mattered. The rest could wait.",
+    "when": {
+     "quest": "q3"
+    }
+   },
+   {
+    "id": "ex-no-labels",
+    "ch": 2,
+    "name": "Hourglass of Habit",
+    "art": "hourglass",
+    "need": "Clear \"Mixed practice\".",
+    "lore": "No hints on the jar. You picked the right formula anyway.",
+    "when": {
+     "quest": "q4"
+    }
+   },
+   {
+    "id": "ex-summary",
+    "ch": 3,
+    "name": "The Living Grid",
+    "need": "Beat the boss: the quarter-end summary.",
+    "lore": "Paste in the data and the grid fills itself. The team lead noticed.",
+    "when": {
+     "quest": "q5"
+    },
+    "sprite": [
+     "kkkkkkkkkkkk",
+     "knnnnnnnnnnk",
+     "kwwkwwwkwwwk",
+     "kkkkkkkkkkkk",
+     "kwwkwwwkwwwk",
+     "kkkkkkkkkkkk",
+     "kwwkwwwkgggk",
+     "kkkkkkkkkkkk",
+     "kwwkwwwkgggk",
+     "kkkkkkkkkkkk",
+     "kwwkwwwkGGGk",
+     "kkkkkkkkkkkk"
+    ]
+   },
+   {
+    "id": "ex-handed-on",
+    "ch": 3,
+    "name": "The Key Handed On",
+    "art": "key",
+    "need": "Use it at work and share the template.",
+    "lore": "Next quarter's report takes a minute now, and not only for you.",
+    "when": {
+     "quest": "q6"
+    }
+   }
+  ],
+  "reference": [
+   {
+    "title": "The shape of a formula",
+    "body": "```\n=FUNCTION(range, criteria, ...)\n```\nStarts with `=`. Ranges are first cell, colon, last cell (`F2:F61`). Text criteria go in double quotes. Comparisons go in quotes too: `\">50\"`."
+   },
+   {
+    "title": "The expenses sheet",
+    "body": "One row per claim, one quarter of made-up team expenses.\n\n- **id** claim number\n- **date** YYYY-MM-DD\n- **month** Jan, Feb or Mar\n- **person** who claimed\n- **category** Travel, Meals, Software, Office, Training (watch for `Softwear`)\n- **amount** pounds\n- **receipt** Yes or No\n- **status** Approved, Pending or Rejected"
+   },
+   {
+    "title": "Which formula when",
+    "body": "- How many rows: **COUNTA**\n- One total or average: **SUM / AVERAGE**, with **ROUND** for money\n- Biggest, smallest: **MAX / MIN**\n- How many match a test: **COUNTIF** (several tests: **COUNTIFS**)\n- Add up the matches: **SUMIF** (several tests: **SUMIFS**, sum range first)\n- A label per row: **IF**, with **AND** for several tests\n- Messy text: a **filter** to spot, **Find and Replace** to fix"
+   }
+  ],
+  "glossary": [
+   {
+    "term": "cell",
+    "def": "One box in a sheet, named by its column letter and row number, like F2.",
+    "quest": "q1"
+   },
+   {
+    "term": "column",
+    "def": "One kind of value running down a sheet, such as amount or status.",
+    "avoid": [
+     "field"
+    ],
+    "quest": "q1"
+   },
+   {
+    "term": "CSV",
+    "def": "A text file with one row per line and commas between values. The usual export format.",
+    "quest": "q1"
+   },
+   {
+    "term": "range",
+    "def": "A block of cells, written first cell, colon, last cell: F2:F61.",
+    "quest": "q1"
+   },
+   {
+    "term": "filter",
+    "def": "Arrows on the headers that list each value in a column and hide rows you don't want to see.",
+    "quest": "q1"
+   },
+   {
+    "term": "formula",
+    "def": "Anything in a cell that starts with = and works out a value.",
+    "quest": "q2"
+   },
+   {
+    "term": "criteria",
+    "def": "The test a COUNTIF, SUMIF or SUMIFS checks each row against, like \"Travel\" or \">50\".",
+    "quest": "q3"
+   },
+   {
+    "term": "helper column",
+    "def": "An extra column that works out a value per row, like a Check or OK flag, for other formulas to use.",
+    "quest": "q3"
+   },
+   {
+    "term": "template",
+    "def": "A copy of a workbook with the formulas kept and the data cleared, ready to reuse.",
+    "quest": "q6"
+   }
+  ],
+  "communities": [
+   {
+    "name": "r/excel",
+    "url": "https://www.reddit.com/r/excel/",
+    "why": "Large and well moderated. Good for 'is there a better formula for this?'"
+   },
+   {
+    "name": "Google Docs Editors Community",
+    "url": "https://support.google.com/docs/community",
+    "why": "Google's own help forum for Sheets questions."
+   }
+  ],
+  "quests": [
+   {
+    "id": "q1",
+    "title": "Open the expenses sheet",
+    "minutes": 20,
+    "source": {
+     "title": "Microsoft Support: Import or export text (.txt or .csv) files",
+     "url": "https://support.microsoft.com/en-us/office/import-or-export-text-txt-or-csv-files-5250ac4c-663c-47ce-937b-339e391393ba"
+    },
+    "win": "You can open a CSV in your own spreadsheet, size it up and fix a messy column before you trust it.",
+    "steps": [
+     {
+      "id": "s1",
+      "kind": "do",
+      "title": "Where this data comes from",
+      "teach": "Most teams claim expenses through a form or an app. Once a quarter, someone exports the claims as a **CSV** file: plain text, one claim per line, commas between the values.\n\nThis sheet is **made up** (a script wrote it with a fixed seed). The file is **team-expenses.csv** in the `skill-tree` folder of your work project.\n\nThe **columns**: `id` (claim number), `date`, `month` (Jan, Feb or Mar), `person`, `category` (Travel, Meals, Software, Office, Training), `amount` (pounds), `receipt` (Yes or No) and `status` (Approved, Pending or Rejected).",
+      "goal": "Find team-expenses.csv on your computer, read the column list, then answer the check question.",
+      "check": {
+       "q": "A row says person Ben, category Meals, amount 18.40, receipt No, status Pending. His manager asks what this row tells her. Which reading is right?",
+       "options": [
+        "Ben was paid 18.40 pounds for a meal, and his receipt was turned down",
+        "Ben spent 18.40 pounds on meals in total across the whole quarter",
+        "Ben claimed 18.40 pounds for a meal, with no receipt, not yet signed off",
+        "Ben's team claimed 18.40 pounds for meals, waiting for a receipt upload"
+       ],
+       "answer": 2,
+       "why": "Each row is one claim by one person. Pending means nobody has approved it yet, so it hasn't been paid. Reading one row as a quarterly total is the most common slip."
+      },
+      "deeper": "**Why it works**\nAlmost every system can export a CSV, and every spreadsheet can open one. That's why so much everyday number work starts here: export from the system that records things, open it in a spreadsheet, then answer questions with formulas.\n\n**Worked example**\nA small shop exports its refunds: `id, date, item, amount, reason`. One refund of a 12.50 pound mug is one row. The shop's total refunds aren't stored anywhere. You work them out with a formula when you need them.\n\n**Common mistakes**\n- Reading one row as a total. Each row is one claim.\n- Treating `month` as a number. Here it's text: Jan, Feb, Mar.\n- Trusting a column before looking at it. Exports often have typos, which is exactly what you'll find in step 4."
+     },
+     {
+      "id": "s2",
+      "kind": "do",
+      "title": "Open it in your spreadsheet",
+      "teach": "**Excel:** double-click the file, or open Excel and use File, Open. **Google Sheets:** open a blank sheet, then File, Import, Upload, pick the file and choose Replace spreadsheet.\n\nThen look. Row 1 holds the column names. Every row under it is one claim. Click a few cells in `amount`: numbers sit on the right of the cell, text sits on the left.",
+      "goal": "Open team-expenses.csv in Excel or Google Sheets and scroll through it once. Then answer the check question.",
+      "check": {
+       "q": "You open the file and every amount sits on the left of its cell, and a quick total shows 0. What's the most likely cause?",
+       "options": [
+        "The file is too large for the spreadsheet, so it skipped the amount column",
+        "The amounts are stored as dates, so they need a date format before adding up",
+        "The amounts came in as text, often because the computer uses commas for decimals",
+        "The receipt column is blank for some rows, which stops the amounts from adding"
+       ],
+       "answer": 2,
+       "why": "Left-aligned numbers are usually text. A spreadsheet set up for a comma decimal reads 18.40 as words. Blank cells elsewhere don't stop a total."
+      },
+      "deeper": "**Why it works**\nA spreadsheet guesses each value's type as it opens a CSV. Numbers it recognises line up on the right and can be added. Values it can't read as numbers stay text, line up on the left and count as zero in a total.\n\n**Worked example**\nA laptop set to a European region expects 18,40. It opens 18.40 as text. In Excel, Data, From Text/CSV lets you pick the file's format before loading. In Google Sheets, File, Settings, Locale changes how numbers are read.\n\n**Common mistakes**\n- Typing over values by hand to fix them. Fix how the file is read instead.\n- Saving over the original CSV in a different format. Keep the download as it is and save your work as a new file.\n- Assuming the first screen is the whole file. Press Ctrl+End to jump to the last row."
+     },
+     {
+      "id": "s3",
+      "kind": "input",
+      "title": "How big is it?",
+      "teach": "`COUNTA` counts the cells in a **range** that aren't empty. A range is a block of cells, written as first cell, colon, last cell. Example on a different sheet: `=COUNTA(B2:B30)` counts the names in B2 to B30. Row 1 holds the header, so start at row 2.",
+      "goal": "How many claims are in the sheet? Count the filled cells in the `id` column, without the header.",
+      "accept": [
+       "60"
+      ],
+      "hints": [
+       "Function: COUNTA, on column A.",
+       "Shape: `=COUNTA(A2:A___)`. Scroll to the last row to find the number."
+      ],
+      "why": "One row per claim, so the filled id cells are the claims.",
+      "deeper": "**Why it works**\nCOUNTA counts any cell that isn't empty: numbers, text or dates. The id column has a value on every claim row, so counting it counts the claims. Starting at row 2 leaves the header out.\n\n**Worked example**\nA sign-up list has names in B2 to B48. `=COUNTA(B2:B48)` gives 47 people. If you're not sure where the list ends, press Ctrl+Down in the column to jump to the last filled cell and read its row number.\n\n**Common mistakes**\n- Starting at row 1, so the header counts as a claim.\n- Using COUNT instead. COUNT only counts numbers, so it would miss a text column.\n- Counting a column with gaps, like `receipt` if some cells were blank. Pick a column that's filled on every row."
+     },
+     {
+      "id": "s4",
+      "kind": "input",
+      "title": "Spot the mess",
+      "teach": "A **filter** puts a small arrow on each header. Click the arrow on a column and it lists every different value in it, once each. It's the quickest way to spot typos. **Excel:** Data, Filter. **Google Sheets:** Data, Create a filter.\n\nExample: a `colour` column might list Red, red and Redd. A spreadsheet treats Redd as a different value, even though a person reads all three as red.",
+      "goal": "Turn on a filter and open the arrow on `category`. How many different values does it list?",
+      "accept": [
+       "6",
+       "six"
+      ],
+      "hints": [
+       "Data, Filter (Excel) or Data, Create a filter (Google Sheets), then the arrow on category.",
+       "Count the ticked values in the list. Look closely at the spellings."
+      ],
+      "why": "There are five real categories, plus one misspelling of Software.",
+      "deeper": "**Why it works**\nFormulas match text exactly, letter by letter (they ignore upper and lower case, but not spelling). If Softwear sits in the column, a formula that adds up Software misses those rows, and the total comes out wrong with no error.\n\n**Worked example**\nA shop's `channel` column lists Online, Onlin and In store under the filter. A total for Online would miss the Onlin rows. Spotting it takes ten seconds; missing it can put a wrong number in a report.\n\n**Common mistakes**\n- Only scanning the first screen of rows. The filter list shows every value in the whole column.\n- Leaving a filter on and forgetting it. Rows it hides still count in most formulas, but you can't see them.\n- Fixing the spelling in your head instead of in the data."
+     },
+     {
+      "id": "s5",
+      "kind": "input",
+      "title": "Fix it with Find and Replace",
+      "teach": "**Find and Replace** swaps one piece of text for another across the sheet. Press **Ctrl+H** in either tool. Type what to find, what to put instead, then **Replace all**. Excel says how many replacements it made. Google Sheets says how many instances it replaced.\n\nExample: find `Redd`, replace with `Red`, and every Redd in the sheet becomes Red at once.",
+      "goal": "Replace the misspelled category with the right spelling, Software. How many cells did it change?",
+      "accept": [
+       "3",
+       "three"
+      ],
+      "hints": [
+       "Ctrl+H. Find the misspelling you saw in the filter list.",
+       "Find `Soft____`, replace with `Software`, then Replace all. Read the message."
+      ],
+      "why": "Three claims had the typo. Your sheet now has five clean categories.",
+      "deeper": "**Why it works**\nFixing the data once, at the start, means every formula you write later is right without extra work. Replace all also tells you how many cells changed, which is a useful check that you fixed what you meant to.\n\n**Worked example**\nA sign-up sheet has `Londn` in 4 rows. Ctrl+H, find Londn, replace with London, Replace all: \"4 replacements\". Re-open the filter on the column and Londn has gone.\n\n**Common mistakes**\n- Replacing a short piece of text that also sits inside other words. Finding `Soft` would change Software too. Find the whole misspelling.\n- Running it on the wrong sheet or column. Select the column first if you want to limit it.\n- Not checking afterwards. Open the filter again: you should see five categories."
+     },
+     {
+      "id": "s6",
+      "kind": "do",
+      "title": "Explain it back",
+      "teach": "Quick check that the **why** stuck, not just the typing. No formula needed.",
+      "goal": "Think it through, then pick.",
+      "check": {
+       "q": "A teammate says: why fix the spelling first, when you could just remember Softwear when you add things up later? What's the strongest answer?",
+       "options": [
+        "Every later formula then works on clean data, so no total quietly misses rows",
+        "Find and Replace makes the file smaller, so formulas run much faster after",
+        "Spreadsheets refuse to add up a column that holds more than one spelling",
+        "The filter arrow stops working until every value in the column matches"
+       ],
+       "answer": 0,
+       "why": "Fix once and every formula after is right. Spreadsheets don't refuse mixed spellings: they just leave rows out, with no warning."
+      }
+     }
+    ],
+    "quiz": [
+     {
+      "q": "You open a new CSV of sales and want to know how many rows it has, without the header. Which formula fits a sheet with ids in A2 to A120?",
+      "options": [
+       "=COUNTA(A1:A120)",
+       "=COUNTA(A2:A120)",
+       "=SUM(A2:A120)",
+       "=COUNTA(A2:H2)"
+      ],
+      "answer": 1,
+      "why": "Start at row 2 to skip the header. SUM would add the id numbers together, which is the tempting mix-up."
+     },
+     {
+      "q": "A filter on the region column lists North, north and Nrth. A formula that adds up North claims will miss which rows?",
+      "options": [
+       "The north rows, because the case is different",
+       "Both north and Nrth rows, for different reasons",
+       "None of them, since filters fix spelling for you",
+       "The Nrth rows, because the spelling is different"
+      ],
+      "answer": 3,
+      "why": "Formulas ignore upper and lower case, so north still counts. A different spelling is a different value."
+     },
+     {
+      "q": "Replace all says it made 40 replacements, but you only expected 3 typos in the city column. What most likely went wrong?",
+      "options": [
+       "The text you searched for also sits inside other values",
+       "Replace all always counts every cell in the whole sheet",
+       "The filter was on, so hidden rows were counted twice",
+       "Google Sheets counts each letter it changes, not cells"
+      ],
+      "answer": 0,
+      "why": "A short search term matches inside longer words. Search for the whole misspelling, then check with the filter."
+     }
+    ]
+   },
+   {
+    "id": "q2",
+    "title": "Totals and averages",
+    "minutes": 20,
+    "source": {
+     "title": "Microsoft Support: SUM function",
+     "url": "https://support.microsoft.com/en-us/office/sum-function-043e1c7d-7726-4e80-8f32-07b23e057f89"
+    },
+    "win": "You can total a column, find its average to the penny, and pick out the biggest and smallest values.",
+    "steps": [
+     {
+      "id": "s1",
+      "kind": "input",
+      "title": "Add it all up",
+      "teach": "A **formula** starts with `=` and works something out. `SUM` adds every number in a range. Example on a different sheet: `=SUM(C2:C13)` adds twelve monthly bills in C2 to C13. Click an empty cell, type the formula, press Enter.",
+      "goal": "What's the total of every claim in the `amount` column? Type it in pounds and pence.",
+      "accept": [
+       "3925.04",
+       "3,925.04",
+       "£3,925.04"
+      ],
+      "hints": [
+       "Function: SUM, on the amount column (F).",
+       "Shape: `=SUM(F2:F___)`."
+      ],
+      "why": "That's the whole quarter's claims, approved or not."
+     },
+     {
+      "id": "s2",
+      "kind": "input",
+      "title": "The typical claim",
+      "teach": "`AVERAGE` adds up a range and divides by how many numbers are in it. Money looks odd with lots of decimals, so wrap it in `ROUND`, which takes the value and how many decimal places to keep.\n\nExample on a different sheet: `=ROUND(AVERAGE(D2:D9), 1)` gives the average test score to 1 decimal place.",
+      "goal": "What's the average claim, rounded to 2 decimal places?",
+      "accept": [
+       "65.42",
+       "£65.42"
+      ],
+      "hints": [
+       "Functions: AVERAGE inside ROUND.",
+       "Shape: `=ROUND(AVERAGE(F2:F___), _)`."
+      ],
+      "why": "ROUND keeps it to the penny.",
+      "deeper": "**Why it works**\nThe average gives you one number for a typical claim, which is easier to compare month to month than a long list. ROUND changes the value itself, not just how it looks, so later formulas use the rounded number.\n\n**Worked example**\nFive taxi fares: 8.20, 12.50, 9.90, 30.00 and 11.40. `=AVERAGE(...)` gives 14.4. Notice the 30.00 fare pulls the average up: most fares are nearer 10. That's worth knowing before you call 14.40 typical.\n\n**Common mistakes**\n- Putting ROUND inside AVERAGE. Round once, on the outside.\n- Using the decimal buttons on the toolbar and thinking the value changed. They only change how it looks.\n- Including the header row. Text is skipped by AVERAGE, but a total row at the bottom would be counted."
+     },
+     {
+      "id": "s3",
+      "kind": "input",
+      "title": "The biggest claim",
+      "teach": "`MAX` returns the biggest number in a range. Example on a different sheet: `=MAX(E2:E50)` finds the highest score in E2 to E50.",
+      "goal": "What's the biggest single claim in the sheet?",
+      "accept": [
+       "281.52",
+       "£281.52"
+      ],
+      "hints": [
+       "Function: MAX.",
+       "Shape: `=MAX(F2:F___)`."
+      ],
+      "why": "Big one-off claims are usually worth a second look."
+     },
+     {
+      "id": "s4",
+      "kind": "input",
+      "title": "The smallest claim",
+      "teach": "`MIN` is the opposite of MAX: the smallest number in a range. It's a quick way to spot a claim that looks too small, like a typo.",
+      "goal": "What's the smallest single claim in the sheet?",
+      "accept": [
+       "8.08",
+       "£8.08"
+      ],
+      "hints": [
+       "Function: MIN.",
+       "Shape: `=MIN(F2:F___)`."
+      ],
+      "why": "MIN and MAX together show the spread of the claims."
+     },
+     {
+      "id": "s5",
+      "kind": "do",
+      "title": "Explain it back",
+      "teach": "Quick check that the **why** stuck, not just the typing. No formula needed.",
+      "goal": "Think it through, then pick.",
+      "check": {
+       "q": "Your average claim is far above what most rows look like when you scroll. What's the most likely reason, and what would show it?",
+       "options": [
+        "AVERAGE skipped the small claims, which MIN would show you",
+        "ROUND moved the average up, which a wider ROUND would fix",
+        "SUM counted the header row, which COUNTA would show you",
+        "A few very big claims pull it up, which MAX would show you"
+       ],
+       "answer": 3,
+       "why": "One or two big values drag an average up. MAX shows how big the biggest is. ROUND only trims decimals."
+      }
+     }
+    ],
+    "quiz": [
+     {
+      "q": "A team lead wants the average training cost to the penny, from costs in D2 to D25. Which formula gives exactly that?",
+      "options": [
+       "=AVERAGE(ROUND(D2:D25, 2))",
+       "=ROUND(SUM(D2:D25), 2)",
+       "=AVERAGE(D2:D25, 2)",
+       "=ROUND(AVERAGE(D2:D25), 2)"
+      ],
+      "answer": 3,
+      "why": "Average first, then round the result. ROUND(SUM()) gives a total, not an average."
+     },
+     {
+      "q": "You typed =SUM(F2:F61) and got a number much bigger than every claim added in your head. You notice a total row at F62. Is that the problem?",
+      "options": [
+       "Yes, SUM always adds every number in the column",
+       "No, F62 is outside the range, so it isn't counted",
+       "Yes, SUM counts F62 because it follows the range",
+       "No, SUM skips any row that has a formula in it"
+      ],
+      "answer": 1,
+      "why": "A range stops at its last cell. If the total is too big, look for a wrong range, or amounts that were typed twice."
+     },
+     {
+      "q": "A sheet shows 14.4 after you pressed the decrease-decimal button on 14.4375. A later formula uses that cell. Which value does it use?",
+      "options": [
+       "14.4, because that's what the cell shows on screen",
+       "14.4375, because the button only changes how it looks",
+       "14.44, because spreadsheets round money automatically",
+       "Nothing, because the cell has been turned into text"
+      ],
+      "answer": 1,
+      "why": "Display buttons don't change the value. Use ROUND when the rounded number must be used later."
+     }
+    ]
+   },
+   {
+    "id": "q3",
+    "title": "Count and add with conditions",
+    "minutes": 30,
+    "source": {
+     "title": "Microsoft Support: SUMIFS function",
+     "url": "https://support.microsoft.com/en-us/office/sumifs-function-c9e748f5-7ea7-455d-9406-611cebce642b"
+    },
+    "win": "You can count and total only the rows that match one or more tests, and label rows with IF.",
+    "steps": [
+     {
+      "id": "s1",
+      "kind": "input",
+      "title": "Count the matches",
+      "teach": "`COUNTIF` counts the cells in a range that match a test, called the **criteria**. Text criteria go in double quotes.\n\nExample on a different sheet: `=COUNTIF(C2:C40, \"Late\")` counts how many deliveries in C2 to C40 say Late. Case doesn't matter: late and Late both count.",
+      "goal": "How many claims are still **Pending**?",
+      "accept": [
+       "13"
+      ],
+      "hints": [
+       "Function: COUNTIF on the status column (H).",
+       "Shape: `=COUNTIF(H2:H___, \"_______\")`."
+      ],
+      "why": "These are claims nobody has signed off yet.",
+      "deeper": "**Why it works**\nCOUNTIF walks down the range and adds 1 for every cell that passes the test. The test can be text (\"Late\"), a number (10) or a comparison in quotes (\">10\").\n\n**Worked example**\nA help desk sheet has a `priority` column. `=COUNTIF(D2:D200, \"High\")` gives the number of high-priority tickets. `=COUNTIF(E2:E200, \">3\")` counts tickets open for more than 3 days.\n\n**Common mistakes**\n- Forgetting the quotes around text. Without them the spreadsheet looks for a named range and gives an error or 0.\n- A stray space in the data. \"Late \" with a space doesn't match \"Late\".\n- Counting the wrong column. The range is where the test is checked, so it must be the status column."
+     },
+     {
+      "id": "s2",
+      "kind": "input",
+      "title": "Add up the matches",
+      "teach": "`SUMIF` adds the numbers on the rows that pass a test. It takes three things: the range to test, the criteria, and the range to add.\n\nExample on a different sheet: `=SUMIF(B2:B40, \"Paper\", D2:D40)` adds the costs in column D on every row where column B says Paper.",
+      "goal": "How much was claimed for **Travel** in total?",
+      "accept": [
+       "2106.92",
+       "2,106.92",
+       "£2,106.92"
+      ],
+      "hints": [
+       "Function: SUMIF. Test the category column, add the amount column.",
+       "Shape: `=SUMIF(E2:E___, \"______\", F2:F___)`."
+      ],
+      "why": "Travel is often the biggest category, so it's the one people ask about first.",
+      "deeper": "**Why it works**\nSUMIF lines the two ranges up row by row. Where the test range passes, it adds the number from the same row in the sum range. That's why both ranges must start and end on the same rows.\n\n**Worked example**\nA stock sheet: column B is `supplier`, column E is `cost`. `=SUMIF(B2:B90, \"Northside\", E2:E90)` is everything bought from Northside. Change the criteria to a cell, like `=SUMIF(B2:B90, H1, E2:E90)`, and you can type any supplier into H1.\n\n**Common mistakes**\n- Ranges of different sizes, like E2:E61 and F2:F60. The total comes out wrong or errors.\n- Swapping the order. The test range comes first, the sum range last.\n- Forgetting the Software typo fix. On the raw file, Software totals would miss three claims."
+     },
+     {
+      "id": "s3",
+      "kind": "input",
+      "title": "More than one test",
+      "teach": "`SUMIFS` adds numbers on rows that pass **every** test you give it. The order is different from SUMIF: the range to add comes **first**, then pairs of test range and criteria.\n\nExample on a different sheet: `=SUMIFS(D2:D40, B2:B40, \"Paper\", C2:C40, \"Jan\")` adds Paper costs in January only. `COUNTIFS` works the same way but counts instead of adding.",
+      "goal": "How much has **Ella** claimed that's **Approved**?",
+      "accept": [
+       "507.86",
+       "£507.86"
+      ],
+      "hints": [
+       "Function: SUMIFS. Sum range first, then person and status tests.",
+       "Shape: `=SUMIFS(F2:F___, D2:D___, \"____\", H2:H___, \"________\")`."
+      ],
+      "why": "Both tests must pass on the same row.",
+      "deeper": "**Why it works**\nEach extra pair narrows the rows down. A row only counts when it passes every test, so two tests means \"this AND that\". The same pattern, with COUNTIFS, answers \"how many\" questions with several conditions.\n\n**Worked example**\nA rota sheet: `hours` in E, `name` in B, `week` in C. `=SUMIFS(E2:E80, B2:B80, \"Sam\", C2:C80, \"Week 3\")` is Sam's hours in week 3. `=COUNTIFS(B2:B80, \"Sam\", E2:E80, \">8\")` counts Sam's shifts over 8 hours.\n\n**Common mistakes**\n- Putting the sum range last, out of habit from SUMIF. SUMIFS wants it first.\n- Expecting OR. SUMIFS is always AND. For \"Ella or Ben\", add two SUMIFS together.\n- Mixing range sizes between pairs."
+     },
+     {
+      "id": "s4",
+      "kind": "input",
+      "title": "Label rows with IF",
+      "teach": "`IF` checks a test and returns one value when it's true, another when it's false. `AND` is true only when all its tests are true.\n\nExample on a different sheet: `=IF(AND(C2>10, D2=\"No\"), \"Chase\", \"Fine\")` labels an order Chase when it's over 10 and not paid. Type it in row 2 of an empty column, then double-click the small square at the cell's corner to fill it down.",
+      "goal": "Make a new column `flag` that says **Check** when a claim is **over 50 pounds** and has **no receipt**, and **OK** otherwise. How many rows say Check?",
+      "accept": [
+       "5"
+      ],
+      "hints": [
+       "Functions: IF with AND inside, then COUNTIF on the new column.",
+       "Shape: `=IF(AND(F2>__, G2=\"__\"), \"Check\", \"OK\")`, filled down, then `=COUNTIF(I2:I___, \"Check\")`."
+      ],
+      "why": "These are the claims a finance team would ask about first.",
+      "deeper": "**Why it works**\nA helper column like `flag` turns a rule into a value on every row. Once it's there, COUNTIF and SUMIFS can use it like any other column. It's also easy for someone else to read and check.\n\n**Worked example**\nA course sheet: `score` in C, `attended` in D. `=IF(AND(C2>=60, D2=\"Yes\"), \"Pass\", \"Retake\")` filled down labels everyone. `=COUNTIF(E2:E40, \"Retake\")` then gives the retake list size.\n\n**Common mistakes**\n- Writing over 50 as `>=50`. Over means strictly more than.\n- Forgetting to fill the formula down, so only row 2 has a label.\n- Typing the labels slightly differently in the IF and the COUNTIF, like Check and Checks."
+     },
+     {
+      "id": "s5",
+      "kind": "do",
+      "title": "Explain it back",
+      "teach": "Quick check that the **why** stuck, not just the typing. No formula needed.",
+      "goal": "Think it through, then pick.",
+      "check": {
+       "q": "A manager asks for Travel claims in March that are still Pending, added up. Which approach fits best?",
+       "options": [
+        "One SUMIFS with three pairs: category, month and status",
+        "One SUMIF on category, then take away March by hand",
+        "COUNTIFS with the same three tests, then times the average",
+        "SUM on the whole column with a filter for each of the tests"
+       ],
+       "answer": 0,
+       "why": "SUMIFS takes as many tests as you need, all on the same row. COUNTIFS counts rows, it doesn't add amounts."
+      }
+     }
+    ],
+    "quiz": [
+     {
+      "q": "You want total spend on the Paper supplier from costs in E and suppliers in B. Which formula is written in the right order?",
+      "options": [
+       "=SUMIF(B2:B90, \"Paper\", E2:E90)",
+       "=SUMIF(E2:E90, \"Paper\", B2:B90)",
+       "=SUMIFS(B2:B90, \"Paper\", E2:E90)",
+       "=SUMIF(\"Paper\", B2:B90, E2:E90)"
+      ],
+      "answer": 0,
+      "why": "SUMIF tests the first range and adds the last one. SUMIFS puts the sum range first, so the SUMIF order there is wrong."
+     },
+     {
+      "q": "Your COUNTIF for \"Approved\" returns 0, but you can see Approved rows. The cells look normal. What's the most likely cause?",
+      "options": [
+       "COUNTIF only counts numbers, so text always gives 0",
+       "The rows are upper case, and COUNTIF is case sensitive",
+       "The cells hold a hidden space, like Approved with a space",
+       "COUNTIF needs the whole column, not a range of rows"
+      ],
+      "answer": 2,
+      "why": "A trailing space makes a different value. COUNTIF ignores case, so that isn't it."
+     },
+     {
+      "q": "A rota needs shifts that are over 8 hours and on a weekend counted. Which function handles both tests in one go?",
+      "options": [
+       "COUNTIF with both tests in the same quotes",
+       "SUMIF with the hours test and then the day",
+       "COUNTIFS with an hours test and a day test",
+       "IF with OR around the two tests, then SUM"
+      ],
+      "answer": 2,
+      "why": "COUNTIFS takes several test pairs and counts rows that pass them all. OR would count rows passing either test."
+     }
+    ]
+   },
+   {
+    "id": "q4",
+    "title": "Mixed practice",
+    "minutes": 25,
+    "mixed": true,
+    "source": {
+     "title": "Google Docs Editors Help: Google Sheets function list",
+     "url": "https://support.google.com/docs/table/25273"
+    },
+    "win": "You can pick the right formula for a plain-English question with no hints about which one to use.",
+    "steps": [
+     {
+      "id": "s1",
+      "kind": "input",
+      "title": "Busy month",
+      "teach": "No labels this time. Read the question, decide which function fits, then write it.",
+      "goal": "How many **Meals** claims were made in **February**?",
+      "accept": [
+       "5"
+      ],
+      "hints": [
+       "Two tests, counted.",
+       "COUNTIFS with category and month."
+      ],
+      "why": "Two tests at once, counted."
+     },
+     {
+      "id": "s2",
+      "kind": "input",
+      "title": "The typical training cost",
+      "teach": "Some questions need two functions together. Think about what each part of the question asks for.",
+      "goal": "What's the average **Training** claim, rounded to 2 decimal places?",
+      "accept": [
+       "152.40",
+       "£152.40",
+       "152.4"
+      ],
+      "hints": [
+       "An average is a total divided by a count, both for Training only.",
+       "`=ROUND(SUMIF(...) / COUNTIF(...), 2)`."
+      ],
+      "why": "Training total divided by the number of Training claims, then rounded."
+     },
+     {
+      "id": "s3",
+      "kind": "input",
+      "title": "Who had the most turned down?",
+      "teach": "When a question asks who has the most, work out the value for each one, then compare.",
+      "goal": "Whose **Rejected** claims add up to the most money? Type the name.",
+      "accept": [
+       "Ella"
+      ],
+      "hints": [
+       "One total per person, Rejected rows only.",
+       "SUMIFS for each name (amount, person, status), then compare the six results."
+      ],
+      "why": "Worth a chat about what the expenses policy allows."
+     },
+     {
+      "id": "s4",
+      "kind": "input",
+      "title": "Missing receipts",
+      "teach": "A share is a part divided by the whole. Format the answer as a percentage, or times it by 100.",
+      "goal": "What percentage of all claims have **no receipt**? Round to a whole number.",
+      "accept": [
+       "22",
+       "22%"
+      ],
+      "hints": [
+       "Count the No receipts, divide by the count of all claims.",
+       "`=ROUND(COUNTIF(G2:G___, \"No\") / COUNTA(A2:A___) * 100, 0)`."
+      ],
+      "why": "Part divided by whole, times 100."
+     }
+    ],
+    "quiz": [
+     {
+      "q": "You need the number of claims by Dev in Feb that are over 30 pounds. Which formula fits?",
+      "options": [
+       "SUMIFS with person, month and an amount test",
+       "COUNTIF on person, then a filter for the rest",
+       "IF with AND on each row, then SUM the column",
+       "COUNTIFS with person, month and an amount test"
+      ],
+      "answer": 3,
+      "why": "How many means count, and three tests means COUNTIFS. SUMIFS would add the money instead."
+     },
+     {
+      "q": "Your share of missing receipts comes out as 0.18 and your manager expected a percentage. What's the quickest fix?",
+      "options": [
+       "Divide the result by 100 again to make it bigger",
+       "Format the cell as a percentage, which shows 18%",
+       "Use SUMIF instead of COUNTIF on the receipt column",
+       "Round it to 0 decimal places, which shows 18 too"
+      ],
+      "answer": 1,
+      "why": "0.18 is 18%: percentage format shows it that way. Rounding 0.18 to 0 places gives 0."
+     },
+     {
+      "q": "To find whose claims add up to the most, a teammate sorts the sheet by amount and reads the top row. What's wrong with that?",
+      "options": [
+       "Sorting changes the amounts, so the totals no longer add up",
+       "The top row is one big claim, not the biggest total per person",
+       "Sorting only works on text columns, not on money amounts",
+       "Nothing, the top row is always the person with the most"
+      ],
+      "answer": 1,
+      "why": "One big claim isn't the same as the biggest total. Total per person first, then compare."
+     }
+    ]
+   },
+   {
+    "id": "q5",
+    "title": "Boss: the quarter-end summary",
+    "minutes": 60,
+    "boss": true,
+    "source": {
+     "title": "Microsoft Support: SUMIFS function",
+     "url": "https://support.microsoft.com/en-us/office/sumifs-function-c9e748f5-7ea7-455d-9406-611cebce642b"
+    },
+    "win": "A one-page summary of the quarter that updates itself when the data changes.",
+    "steps": [
+     {
+      "id": "s1",
+      "kind": "do",
+      "title": "Set up the summary tab",
+      "teach": "The boss fight builds the project: a **Summary** tab that answers the questions a team lead asks every quarter. Add a new tab. Put the five categories down column A (A2 to A6) and Jan, Feb, Mar and Total across row 1 (B1 to E1). Each cell in the grid will hold one formula that reads the data tab.",
+      "goal": "Add the Summary tab with the category and month labels. Then answer the check question.",
+      "check": {
+       "q": "You're about to fill the grid. Why type the labels into cells instead of writing \"Travel\" and \"Jan\" inside every formula?",
+       "options": [
+        "Spreadsheets can't use text inside a formula unless it sits in a cell first",
+        "Labels in cells make the formulas run faster on a very large data tab",
+        "The formulas can point at the label cells, so one formula fills the whole grid",
+        "The Summary tab can only read the data tab when the labels are in row 1"
+       ],
+       "answer": 2,
+       "why": "With criteria in cells, you write one formula, fill it across and down, and each cell picks up its own labels. Text inside formulas works too, it's just 15 formulas to type."
+      },
+      "deeper": "**Why it works**\nA summary grid is the same question asked many times: total for this category in this month. Writing it once and filling it saves time and stops typos, because every cell uses the same logic.\n\n**Worked example**\nA sales grid has products in A2:A4 and regions in B1:D1. One SUMIFS in B2 points at A2 for the product and B1 for the region. Fill it across and down and all nine cells are done.\n\n**Common mistakes**\n- Typing labels with different spelling from the data, like Meal for Meals. The total comes out as 0.\n- Putting the summary on the data tab, where a sort or filter can move it.\n- Leaving no Total column, so nobody can check the grid against the grand total."
+     },
+     {
+      "id": "s2",
+      "kind": "input",
+      "title": "Fill the grid",
+      "teach": "In B2, write one SUMIFS that adds the amounts where the category matches the label in column A **and** the month matches the label in row 1. Refer to the data tab by its name, like `'team-expenses'!F2:F61`. Add `$` signs so the ranges and label positions stay put as you fill: `$A2` keeps column A, `B$1` keeps row 1.",
+      "goal": "Fill the grid. What's the total for **Travel** in **March**?",
+      "accept": [
+       "1027.43",
+       "1,027.43",
+       "£1,027.43"
+      ],
+      "hints": [
+       "SUMIFS with two tests: category against $A2, month against B$1.",
+       "Shape: `=SUMIFS(data!$F$2:$F$61, data!$E$2:$E$61, $A2, data!$C$2:$C$61, B$1)`, with your tab's name for data."
+      ],
+      "why": "One formula, filled across and down.",
+      "deeper": "**Why it works**\nWhen you fill a formula, cell references move with it. A `$` in front of a column letter or row number stops that part moving. `$A2` always reads column A but moves down rows. `B$1` always reads row 1 but moves across columns. The data ranges get `$` on both, so they never move.\n\n**Worked example**\nA price grid: sizes in A2:A4, colours in B1:D1. `=SUMIFS(Stock!$E$2:$E$90, Stock!$B$2:$B$90, $A2, Stock!$C$2:$C$90, B$1)` filled to D4 gives every size and colour.\n\n**Common mistakes**\n- No `$` on the data ranges, so they slide down as you fill and miss rows.\n- `$` in the wrong place, so every cell reads the same label.\n- A tab name with a space or hyphen not wrapped in single quotes."
+     },
+     {
+      "id": "s3",
+      "kind": "input",
+      "title": "Month totals",
+      "teach": "Add a **Total** row under the grid (row 7) with a SUM for each month. Then check it: the Total row plus the Total column should both add up to the grand total from quest 2.",
+      "goal": "What's the total for **Feb**, all categories together?",
+      "accept": [
+       "1539.62",
+       "1,539.62",
+       "£1,539.62"
+      ],
+      "hints": [
+       "SUM down the Feb column of your grid.",
+       "Shape: `=SUM(C2:C6)` on the Summary tab."
+      ],
+      "why": "If the grand totals match quest 2, your grid is right."
+     },
+     {
+      "id": "s4",
+      "kind": "input",
+      "title": "Money waiting on approval",
+      "teach": "A team lead always asks how much is still waiting. Add a line under the grid labelled **Pending** with one formula.",
+      "goal": "How much money is in **Pending** claims?",
+      "accept": [
+       "729.69",
+       "£729.69"
+      ],
+      "hints": [
+       "SUMIF on the status column.",
+       "Shape: `=SUMIF(data!H2:H61, \"Pending\", data!F2:F61)`."
+      ],
+      "why": "Money not yet signed off."
+     },
+     {
+      "id": "s5",
+      "kind": "input",
+      "title": "Money to check",
+      "teach": "Add one more line: the money in the claims your `flag` column marks Check. The flag column is on the data tab, so point at it there.",
+      "goal": "How much money is in rows flagged **Check**?",
+      "accept": [
+       "702.08",
+       "£702.08"
+      ],
+      "hints": [
+       "SUMIF on the flag column, adding the amounts.",
+       "Shape: `=SUMIF(data!I2:I61, \"Check\", data!F2:F61)`."
+      ],
+      "why": "Your summary now flags the risk as well as the totals."
+     },
+     {
+      "id": "s6",
+      "kind": "do",
+      "title": "Explain your summary",
+      "teach": "Read your Summary tab as if you were the team lead seeing it for the first time. Add a text box or a cell with **two findings**, in plain words: what stands out, and what to do about it.",
+      "goal": "Write two findings on the Summary tab. Then answer the check question.",
+      "check": {
+       "q": "Which finding would help a team lead most when they read your summary?",
+       "options": [
+        "Travel was highest in March and three claims still need receipts, so chase those first",
+        "The summary uses SUMIFS with dollar signs so it fills across the whole grid at once",
+        "The data tab has 60 rows and 8 columns of made-up team expenses for the quarter",
+        "Spreadsheets can add up money by category and month using a summary grid of formulas"
+       ],
+       "answer": 0,
+       "why": "A finding says what the numbers mean and what to do. Describing the formulas or the data is the work, not the insight."
+      }
+     }
+    ],
+    "quiz": [
+     {
+      "q": "You fill a SUMIFS from B2 across to D2 and every cell shows the same total as B2. Which fix is most likely needed?",
+      "options": [
+       "Change the month criteria to $B$1 so it stays put",
+       "Remove the $ from the data ranges so they move too",
+       "Add a fourth test pair for the month column again",
+       "Change the month criteria to B$1 so it moves across"
+      ],
+      "answer": 3,
+      "why": "The month label has to move across: B$1 locks only the row. $B$1 locks both, which is what's causing the same answer."
+     },
+     {
+      "q": "Your grid's grand total is 40 pounds lower than the SUM from quest 2. What should you check first?",
+      "options": [
+       "A category label in column A that doesn't match the data",
+       "Whether ROUND was used on the quest 2 total as well",
+       "Whether the Summary tab is to the left of the data tab",
+       "The number of decimal places shown on the grid cells"
+      ],
+      "answer": 0,
+      "why": "A label that doesn't match makes a row of zeros, so money goes missing. Tab order and display formats don't change values."
+     },
+     {
+      "q": "Next quarter, the new export has 75 rows instead of 60. Your formulas use rows 2 to 61. What happens to the summary?",
+      "options": [
+       "The formulas grow by themselves to cover the new rows",
+       "Every formula shows an error until the ranges are fixed",
+       "The last 15 claims are left out, so totals come out too low",
+       "The summary double counts the first 15 rows of claims"
+      ],
+      "answer": 2,
+      "why": "Fixed ranges stop where you told them. Use whole columns (F:F) or a range with room to spare in a reusable template."
+     }
+    ]
+   },
+   {
+    "id": "q6",
+    "title": "Use it at work",
+    "minutes": 30,
+    "ship": true,
+    "source": {
+     "title": "Microsoft Support: IF function",
+     "url": "https://support.microsoft.com/en-us/office/if-function-69aed7c9-4e8a-4755-a9bc-aa8bbff73be2"
+    },
+    "win": "A reusable template with notes, and one real task at work done with formulas instead of by hand.",
+    "steps": [
+     {
+      "id": "s1",
+      "kind": "do",
+      "title": "Turn it into a template",
+      "teach": "A **template** is a copy of your workbook with the formulas kept and the data cleared, ready for next quarter. Save a copy with a new name. On the data tab, delete the claim rows but keep the header row. Change the summary ranges to whole columns, like `F:F`, so they pick up any number of rows.",
+      "goal": "Save a template copy with no data and whole-column ranges. Then answer the check question.",
+      "check": {
+       "q": "You paste next quarter's claims into the template's empty data tab. What should the Summary tab do?",
+       "options": [
+        "Show errors until you type each SUMIFS in again by hand",
+        "Keep last quarter's totals until you press a refresh button",
+        "Copy the old data back in, since templates keep a backup",
+        "Fill itself in, because the formulas read whole columns"
+       ],
+       "answer": 3,
+       "why": "Formulas recalculate as soon as the data changes. Whole-column ranges mean new rows are included."
+      },
+      "deeper": "**Why it works**\nThe work in a report is the logic, not the numbers. Once the logic lives in formulas, next quarter's report is a paste and a quick check. Whole-column ranges like `F:F` include any row you add, and SUMIFS ignores the header text.\n\n**Worked example**\nA monthly timesheet template has a Summary tab with SUMIFS by person. Each month someone pastes the new export into the data tab and the summary is done in a minute.\n\n**Common mistakes**\n- Clearing the header row with the data, so the column names are gone.\n- Saving over the original instead of a copy.\n- Leaving a total row inside a whole-column range, which then gets counted twice."
+     },
+     {
+      "id": "s2",
+      "kind": "do",
+      "title": "Write the notes",
+      "teach": "Add a **Notes** tab. One line per formula: what it answers, in plain words. Then one line on where the data comes from and how to paste it in. Notes are what make a template usable by someone else, or by you in three months.",
+      "goal": "Write the Notes tab. Then answer the check question.",
+      "check": {
+       "q": "A new teammate opens your template next quarter. Which note helps them most?",
+       "options": [
+        "Paste the expenses export into the data tab, row 2 down, and check the grand total",
+        "This workbook was built with SUMIFS, COUNTIF and IF formulas over several weeks",
+        "The Summary tab is the second tab and has a grid of numbers with labels on it",
+        "Formulas are a way to work out values from other cells in a spreadsheet file"
+       ],
+       "answer": 0,
+       "why": "Good notes say what to do and how to check it. A list of functions or tabs doesn't help someone run it."
+      },
+      "deeper": "**Why it works**\nA workbook without notes only works for the person who built it. One plain line per formula lets anyone check it, fix it or reuse it. It also makes you spell out what each number means, which often shows up a mistake.\n\n**Worked example**\nNotes tab, line 1: \"Data: paste the expenses export into the data tab from row 2. Check: the grid's grand total matches the SUM of the amount column.\" Line 2: \"Pending: money in claims nobody has approved yet.\"\n\n**Common mistakes**\n- Writing the formula out again instead of saying what it answers.\n- Notes that only make sense to you, like \"see my email\".\n- Forgetting the check step, so nobody knows how to tell the summary is right."
+     },
+     {
+      "id": "s3",
+      "kind": "do",
+      "title": "Use it on your own work",
+      "teach": "Pick one task at work you do by hand in a spreadsheet: adding things up by type, counting by status, or checking rows against a rule. Do it this time with COUNTIFS, SUMIFS or an IF flag. Keep your work files on your computer: never type their numbers, names or details into this page.",
+      "goal": "Do one real task at work with formulas instead of by hand. Then answer the check question.",
+      "check": {
+       "q": "You've rebuilt a weekly tally with COUNTIFS. Before you trust it, what's the best check?",
+       "options": [
+        "Paste the work data into this page so the checker can mark it",
+        "Delete the hand-made version so nobody mixes up the two of them",
+        "Compare its result with last week's hand count for the same data",
+        "Ask a colleague to type the COUNTIFS again from memory as well"
+       ],
+       "answer": 2,
+       "why": "Check a new formula against a result you already trust. Work data stays on your computer, never on this page."
+      },
+      "deeper": "**Why it works**\nA skill sticks when you use it on something real. The same few formulas cover a lot of hand work: COUNTIFS for tallies by status, SUMIFS for totals by type and month, and an IF flag for rows that break a rule.\n\n**Worked example**\nSomeone ticks off a weekly list of requests by hand and counts the open ones. One COUNTIFS on the status and week columns does it, and next week it's already there. They check it once against their hand count, then stop counting by hand.\n\n**Common mistakes**\n- Picking a huge task first. Start with one tally or one total.\n- Not checking the formula against a result you trust.\n- Pasting work numbers, names or details into this page or into Ask Claude. They stay in your own files."
+     },
+     {
+      "id": "s4",
+      "kind": "do",
+      "title": "Share it safely",
+      "teach": "Share the **template**, not the data. A template with notes and no real claims is safe to pass round your team. If you save it to a shared drive, name it clearly, like `expenses-summary-template`.",
+      "goal": "Share or save your template where your team can use it. Then answer the check question.",
+      "check": {
+       "q": "A colleague asks for your expenses summary so they can do the same for their team. What should you send?",
+       "options": [
+        "The full workbook with this quarter's claims in it",
+        "A screenshot of your Summary tab with the totals",
+        "The template with notes and the data tab empty",
+        "The formulas typed out in a chat message for them"
+       ],
+       "answer": 2,
+       "why": "The template is what they need. Real claims hold other people's details, so they stay with you."
+      }
+     }
+    ],
+    "quiz": [
+     {
+      "q": "You switch a template's ranges from F2:F61 to F:F. Next quarter there are 90 claims. What does the summary now include?",
+      "options": [
+       "Only the first 60 claims, as the template was set",
+       "None of them, since F:F only reads the header",
+       "The 90 claims twice, as F:F reads every tab",
+       "All 90 claims, because the whole column is read"
+      ],
+      "answer": 3,
+      "why": "A whole-column range reads every row in that column on that tab. SUMIFS skips the header text."
+     },
+     {
+      "q": "Which of these is safe to share with another team as an example of your work?",
+      "options": [
+       "The live workbook with real names and amounts in it",
+       "A template with formulas and made-up sample rows",
+       "A copy of the real data with the names deleted only",
+       "Screenshots of real claims with the amounts showing"
+      ],
+      "answer": 1,
+      "why": "Made-up rows show how it works without anyone's real details. Deleting names alone can still leave private details."
+     },
+     {
+      "q": "Three months on, you open your template and can't remember what the Pending line does. What would have prevented this?",
+      "options": [
+       "Longer formulas with more brackets around each part",
+       "A Notes tab with one line per formula in plain words",
+       "Colouring the Pending cell red so it stands out more",
+       "Moving the Pending line to the top of the summary tab"
+      ],
+      "answer": 1,
+      "why": "Notes explain the why. Colours and positions don't say what a formula answers."
+     }
+    ]
+   }
+  ]
+ },
+ "cards": [
+  {
+   "id": "example-q1-1",
+   "quest": "q1",
+   "front": "Why look at a column with a filter before adding it up?",
+   "back": "To spot typos like Softwear, which formulas treat as a different value."
+  },
+  {
+   "id": "example-q1-2",
+   "quest": "q1",
+   "front": "How do you count rows without the header?",
+   "back": "`=COUNTA(A2:A___)`: start the range at row 2."
+  },
+  {
+   "id": "example-q1-3",
+   "quest": "q1",
+   "front": "Fix one misspelling across the whole sheet?",
+   "back": "Find and Replace (Ctrl+H), then Replace all. Find the whole misspelling."
+  },
+  {
+   "id": "example-q2-1",
+   "quest": "q2",
+   "front": "Average to the penny?",
+   "back": "`=ROUND(AVERAGE(range), 2)`. Round once, on the outside."
+  },
+  {
+   "id": "example-q2-2",
+   "quest": "q2",
+   "front": "Do the decimal buttons change a value?",
+   "back": "No, only how it looks. ROUND changes the value."
+  },
+  {
+   "id": "example-q3-1",
+   "quest": "q3",
+   "front": "SUMIF vs SUMIFS: where does the sum range go?",
+   "back": "SUMIF: last. SUMIFS: first."
+  },
+  {
+   "id": "example-q3-2",
+   "quest": "q3",
+   "front": "Text criteria in COUNTIF?",
+   "back": "In double quotes: `\"Pending\"`. Case doesn't matter, spelling and spaces do."
+  },
+  {
+   "id": "example-q3-3",
+   "quest": "q3",
+   "front": "IF with two tests that must both be true?",
+   "back": "`=IF(AND(test1, test2), \"yes value\", \"no value\")`."
+  },
+  {
+   "id": "example-q4-1",
+   "quest": "q4",
+   "front": "An average for one category only?",
+   "back": "SUMIF divided by COUNTIF for that category, then ROUND."
+  },
+  {
+   "id": "example-q4-2",
+   "quest": "q4",
+   "front": "A share as a percentage?",
+   "back": "Part divided by whole. Format as % or times by 100."
+  },
+  {
+   "id": "example-q5-1",
+   "quest": "q5",
+   "front": "What does $ do in B$1?",
+   "back": "Locks the row, so filling across moves the column but always reads row 1."
+  },
+  {
+   "id": "example-q5-2",
+   "quest": "q5",
+   "front": "Check a summary grid?",
+   "back": "Its grand total should match a plain SUM of the whole amount column."
+  },
+  {
+   "id": "example-q6-1",
+   "quest": "q6",
+   "front": "Why whole columns like F:F in a template?",
+   "back": "They include any number of rows, so next quarter's data just works."
+  },
+  {
+   "id": "example-q6-2",
+   "quest": "q6",
+   "front": "What do you share with another team?",
+   "back": "The template with notes and no real data."
+  }
+ ]
+}

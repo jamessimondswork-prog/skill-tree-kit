@@ -1,0 +1,429 @@
+{
+ "stat": "example-formulas",
+ "statName": "Spreadsheet formulas (example)",
+ "ladder": [
+  {
+   "level": 1,
+   "name": "Novice",
+   "can": "Open a CSV in a spreadsheet and work out totals, averages, biggest and smallest values and counts on a range: SUM, AVERAGE, MIN, MAX, COUNTA, ROUND.",
+   "proof": "Timed Rank Trial on the page: 6 problems, 5 to pass, no hints.",
+   "benchmark": "Can answer simple 'how much in total' questions from a sheet.",
+   "quest": "Become a spreadsheet beginner"
+  },
+  {
+   "level": 2,
+   "name": "Beginner",
+   "can": "Count and add with conditions (COUNTIF, COUNTIFS, SUMIF, SUMIFS), label rows with IF and AND, and clean messy text before counting it.",
+   "proof": "Timed Rank Trial on the page: 6 problems, 5 to pass, no hints.",
+   "benchmark": "Where a typical intro spreadsheet course leaves you.",
+   "quest": "Become a spreadsheet beginner"
+  },
+  {
+   "level": 3,
+   "name": "Competent",
+   "can": "Combine formulas to summarise a sheet you haven't seen: several conditions at once, averages for a subset, shares as percentages and a summary grid with $ references.",
+   "proof": "Timed Rank Trial on the page, at least half on data or scenarios you haven't practised: 6 problems, 5 to pass, no hints.",
+   "benchmark": "Builds a reliable summary from a new export without help.",
+   "quest": "Summarise any sheet with confidence"
+  },
+  {
+   "level": 4,
+   "name": "Proficient",
+   "can": "Lookups (XLOOKUP, or INDEX with MATCH), pivot tables, data validation and tidy multi-tab workbooks, on unfamiliar data.",
+   "proof": "Timed Rank Trial on the page, at least half on data or scenarios you haven't practised: 6 problems, 5 to pass, no hints.",
+   "benchmark": "The person the team asks to fix a broken workbook.",
+   "quest": "Master lookups and pivots"
+  },
+  {
+   "level": 5,
+   "name": "Advanced",
+   "can": "Dynamic array formulas (FILTER, UNIQUE, SORT), LET and LAMBDA, and repeatable data cleaning with Power Query or a similar tool.",
+   "proof": "Rank Trial on hard problems, plus outside evidence.",
+   "benchmark": "Builds workbooks others run every week without breaking.",
+   "quest": "Become the team's spreadsheet fixer",
+   "evidence": "A real certification at an expert level for your spreadsheet tool, or a public workbook using dynamic arrays and repeatable cleaning, reviewed by an experienced user."
+  },
+  {
+   "level": 6,
+   "name": "Expert",
+   "can": "Designs workbook models others rely on, audits formulas for errors, and keeps large workbooks fast and readable.",
+   "proof": "Rank Trial plus outside evidence, reviewed by an experienced modeller.",
+   "benchmark": "Trusted to build and review models for a whole department.",
+   "quest": "Become the lead workbook designer",
+   "evidence": "A public model on open data with documentation and an error audit, reviewed and signed off by an experienced modeller."
+  },
+  {
+   "level": 7,
+   "name": "Master",
+   "can": "Top-level spreadsheet knowledge: calculation engine behaviour, advanced modelling standards, and teaching and reviewing others' workbooks.",
+   "proof": "Outside evidence of standing, plus peer review. No page trial can prove this level.",
+   "benchmark": "Recognised beyond your own team as a spreadsheet authority.",
+   "quest": "Become a spreadsheet master",
+   "evidence": "Public teaching or answers others rely on, plus a written review of your work by a recognised expert."
+  }
+ ],
+ "trials": [
+  {
+   "level": 1,
+   "pick": 6,
+   "passMark": 5,
+   "placementPick": 4,
+   "placementPass": 3,
+   "minutes": 20,
+   "tool": "Excel or Google Sheets",
+   "dataFiles": [
+    {
+     "name": "team-expenses.csv",
+     "path": "example/team-expenses.csv"
+    }
+   ],
+   "problems": [
+    {
+     "id": "n1",
+     "kind": "input",
+     "goal": "In `team-expenses.csv` as downloaded, January is rows 2-21. What's the **total** of the January claims?",
+     "accept": [
+      "1038.60",
+      "1,038.60",
+      "£1,038.60",
+      "1038.6"
+     ]
+    },
+    {
+     "id": "n2",
+     "kind": "input",
+     "goal": "February is rows 22-41. What's the **average** February claim, rounded to 2 decimal places?",
+     "accept": [
+      "76.98",
+      "£76.98"
+     ]
+    },
+    {
+     "id": "n3",
+     "kind": "input",
+     "goal": "March is rows 42-61. What's the **biggest** March claim?",
+     "accept": [
+      "160.18",
+      "£160.18"
+     ]
+    },
+    {
+     "id": "n4",
+     "kind": "input",
+     "goal": "What's the **smallest** January claim (rows 2-21)?",
+     "accept": [
+      "11.82",
+      "£11.82"
+     ]
+    },
+    {
+     "id": "n5",
+     "kind": "input",
+     "goal": "What's the **total** of February and March together (rows 22-61)?",
+     "accept": [
+      "2886.44",
+      "2,886.44",
+      "£2,886.44"
+     ]
+    },
+    {
+     "id": "n6",
+     "kind": "input",
+     "goal": "How far apart are the biggest and smallest claims in the whole sheet? Type the difference.",
+     "accept": [
+      "273.44",
+      "£273.44"
+     ]
+    },
+    {
+     "id": "n7",
+     "kind": "input",
+     "goal": "What's the average **January** claim (rows 2-21), rounded to the **nearest whole pound**?",
+     "accept": [
+      "52"
+     ]
+    },
+    {
+     "id": "c1",
+     "kind": "choice",
+     "q": "A sheet has prices in C2 to C40 and a total row at C41. Which formula gives the average price without the total row?",
+     "options": [
+      "=AVERAGE(C1:C41)",
+      "=AVERAGE(C2:C40)",
+      "=AVERAGE(C2:C41)",
+      "=SUM(C2:C40)/41"
+     ],
+     "answer": 1,
+     "why": "Stop the range above the total row. Dividing by 41 counts a row that isn't a price."
+    },
+    {
+     "id": "c2",
+     "kind": "choice",
+     "q": "You need the number of rows in a list of names in B2 to B90. Which formula counts them?",
+     "options": [
+      "=SUM(B2:B90)",
+      "=MAX(B2:B90)",
+      "=COUNTA(B1:B1)",
+      "=COUNTA(B2:B90)"
+     ],
+     "answer": 3,
+     "why": "COUNTA counts filled cells, including text. SUM and MAX only work on numbers."
+    },
+    {
+     "id": "c3",
+     "kind": "choice",
+     "q": "A report needs money to the penny, and a later formula uses the value. What should you use?",
+     "options": [
+      "ROUND(value, 2) in the formula itself",
+      "The decrease-decimal button twice",
+      "Format the cell as currency only",
+      "Type the rounded number over it"
+     ],
+     "answer": 0,
+     "why": "ROUND changes the value. Display formats only change how it looks."
+    }
+   ]
+  },
+  {
+   "level": 2,
+   "pick": 6,
+   "passMark": 5,
+   "placementPick": 4,
+   "placementPass": 3,
+   "minutes": 20,
+   "tool": "Excel or Google Sheets",
+   "dataFiles": [
+    {
+     "name": "team-expenses.csv",
+     "path": "example/team-expenses.csv"
+    }
+   ],
+   "problems": [
+    {
+     "id": "g1",
+     "kind": "input",
+     "goal": "How many claims did **Ben** make?",
+     "accept": [
+      "12"
+     ]
+    },
+    {
+     "id": "g2",
+     "kind": "input",
+     "goal": "How much was claimed for **Meals** in total?",
+     "accept": [
+      "447.89",
+      "£447.89"
+     ]
+    },
+    {
+     "id": "g3",
+     "kind": "input",
+     "goal": "How much was claimed for **Software** in total? Careful: this is the file as downloaded.",
+     "accept": [
+      "280.95",
+      "£280.95"
+     ]
+    },
+    {
+     "id": "g4",
+     "kind": "input",
+     "goal": "How many claims are **over 100 pounds**?",
+     "accept": [
+      "16"
+     ]
+    },
+    {
+     "id": "g5",
+     "kind": "input",
+     "goal": "How much does **Femi** have in **Pending** claims?",
+     "accept": [
+      "244.03",
+      "£244.03"
+     ]
+    },
+    {
+     "id": "g6",
+     "kind": "input",
+     "goal": "How many **Travel** claims have **no receipt**?",
+     "accept": [
+      "6"
+     ]
+    },
+    {
+     "id": "g7",
+     "kind": "input",
+     "goal": "Label claims of **200 pounds or more** as Big. How many Big claims are there?",
+     "accept": [
+      "1"
+     ]
+    },
+    {
+     "id": "c1",
+     "kind": "choice",
+     "q": "A manager wants the total cost on rows where region is North and status is Open. Which formula fits?",
+     "options": [
+      "SUMIF with both tests inside one set of quotes",
+      "SUMIFS with the cost range first, then two test pairs",
+      "COUNTIFS with the two tests, then add the cost",
+      "SUM of the cost column with a filter left on"
+     ],
+     "answer": 1,
+     "why": "SUMIFS takes several tests and adds the matching costs. COUNTIFS counts rows, it doesn't add money."
+    },
+    {
+     "id": "c2",
+     "kind": "choice",
+     "q": "Your COUNTIF for \"Closed\" misses some rows that clearly say Closed. What's the likely cause?",
+     "options": [
+      "COUNTIF only counts upper-case text",
+      "COUNTIF can't count more than 50 rows",
+      "The rows are sorted in the wrong order",
+      "Some cells hold a hidden space or a typo"
+     ],
+     "answer": 3,
+     "why": "Spaces and typos make different values. COUNTIF ignores case and sort order."
+    },
+    {
+     "id": "c3",
+     "kind": "choice",
+     "q": "You want a column saying Late when days is over 5 and paid is No. Which formula is right for row 2?",
+     "options": [
+      "=IF(AND(C2>5, D2=\"No\"), \"Late\", \"OK\")",
+      "=IF(C2>5, D2=\"No\", \"Late\", \"OK\")",
+      "=IF(OR(C2>5, D2=\"No\"), \"Late\", \"OK\")",
+      "=AND(IF(C2>5), D2=\"No\", \"Late\")"
+     ],
+     "answer": 0,
+     "why": "Both tests must be true, so AND goes inside IF. OR would label rows that pass only one test."
+    }
+   ]
+  },
+  {
+   "level": 3,
+   "pick": 6,
+   "passMark": 5,
+   "placementPick": 4,
+   "placementPass": 3,
+   "minutes": 30,
+   "tool": "Excel or Google Sheets",
+   "dataFiles": [
+    {
+     "name": "trip-expenses.csv",
+     "path": "example/trip-expenses.csv"
+    },
+    {
+     "name": "team-expenses.csv",
+     "path": "example/team-expenses.csv"
+    }
+   ],
+   "problems": [
+    {
+     "id": "u1",
+     "kind": "input",
+     "goal": "`trip-expenses.csv` lists the costs of three team trips. What did the **Glasgow** trip cost in total?",
+     "accept": [
+      "790.49",
+      "£790.49"
+     ],
+     "unseen": true
+    },
+    {
+     "id": "u2",
+     "kind": "input",
+     "goal": "In `trip-expenses.csv`, what's the average **Hotel** cost, rounded to 2 decimal places?",
+     "accept": [
+      "108.47",
+      "£108.47"
+     ],
+     "unseen": true
+    },
+    {
+     "id": "u3",
+     "kind": "input",
+     "goal": "In `trip-expenses.csv`, who spent the most on **Taxi** across all trips? Type the name.",
+     "accept": [
+      "Kofi"
+     ],
+     "unseen": true
+    },
+    {
+     "id": "u4",
+     "kind": "input",
+     "goal": "In `trip-expenses.csv`, what percentage of bookings were **booked early**? Round to a whole number.",
+     "accept": [
+      "73",
+      "73%"
+     ],
+     "unseen": true
+    },
+    {
+     "id": "u5",
+     "kind": "input",
+     "goal": "In `trip-expenses.csv`, how much did **Train** tickets for **Leeds** cost when they were **not** booked early?",
+     "accept": [
+      "140.48",
+      "£140.48"
+     ],
+     "unseen": true
+    },
+    {
+     "id": "n6",
+     "kind": "input",
+     "goal": "Back on `team-expenses.csv` (Software fixed): what's the average **Approved** claim, rounded to 2 decimal places?",
+     "accept": [
+      "65.16",
+      "£65.16"
+     ]
+    },
+    {
+     "id": "n7",
+     "kind": "input",
+     "goal": "In `team-expenses.csv`, which month had the most money claimed? Type Jan, Feb or Mar.",
+     "accept": [
+      "Feb"
+     ]
+    },
+    {
+     "id": "c1",
+     "kind": "choice",
+     "q": "You fill =SUMIFS(D2:D50, B2:B50, $A2, C2:C50, B$1) down and across a grid, and the totals drift wrong lower down. What's missing?",
+     "options": [
+      "A $ on the A in $A2, which already has one there",
+      "$ signs on the data ranges, so they stop moving",
+      "A ROUND around the SUMIFS to tidy the decimals",
+      "An extra test pair for the row labels in column A"
+     ],
+     "answer": 1,
+     "why": "Without $ the data ranges slide down as you fill, and miss rows. Lock them with $D$2:$D$50 and so on."
+    },
+    {
+     "id": "c2",
+     "kind": "choice",
+     "q": "A team lead wants the average order value for the North region only. Which formula works with SUMIF and COUNTIF?",
+     "options": [
+      "SUMIF of North orders divided by COUNTA of all rows",
+      "COUNTIF of North divided by SUMIF of North orders",
+      "SUM of all orders divided by COUNTIF of North rows",
+      "SUMIF of North orders divided by COUNTIF of North"
+     ],
+     "answer": 3,
+     "why": "An average for a subset is that subset's total over that subset's count. Dividing by all rows gives a share, not an average."
+    },
+    {
+     "id": "c3",
+     "kind": "choice",
+     "q": "A summary grid's grand total doesn't match the plain SUM of the data. What do you check first?",
+     "options": [
+      "Labels in the grid that don't match the data's spelling",
+      "Whether the grid is on a tab to the left of the data",
+      "The number of decimal places shown in each cell",
+      "Whether the data tab has its filter turned on"
+     ],
+     "answer": 0,
+     "why": "A label that doesn't match makes zeros, so money goes missing. Tab order and display don't change values."
+    }
+   ]
+  }
+ ]
+}

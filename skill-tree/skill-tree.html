@@ -1,0 +1,2242 @@
+<title>My Skill Tree</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;700&family=Barlow:wght@400;500;600&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+/* Layout: arena HUD. Rank badge + boost bar on top, Today's run, then the mission card, skill cards, topic paths and match history. Views swap in place. Dark-first. */
+:root {
+  --bg: #0a0e1c; --panel: #121a2e; --panel2: #0e1526; --ink: #e9edf7; --muted: #8d99b8; --line: #243052;
+  --boost: #ff7a1a; --boost-soft: #3b2211; --good: #3ddc84; --good-soft: #10301f; --bad: #ff5c5c; --bad-soft: #3a1515;
+  --bronze: #c8793a; --silver: #b9c4d6; --gold: #f2c14e; --plat: #5fe3d0; --diamond: #a98bff;
+  --f-display: "Chakra Petch", "Segoe UI", system-ui, sans-serif;
+  --f-body: "Barlow", "Segoe UI", system-ui, sans-serif;
+  --f-mono: "JetBrains Mono", Consolas, monospace;
+  color-scheme: dark;
+}
+@media (prefers-color-scheme: light) { :root:not([data-theme="dark"]) {
+  --bg: #eef1f7; --panel: #ffffff; --panel2: #f4f6fb; --ink: #121a2c; --muted: #56627c; --line: #d3dae6;
+  --boost: #e8610f; --boost-soft: #fde3d2; --good: #1a8a4c; --good-soft: #d9f1e3; --bad: #c43535; --bad-soft: #f8dddd;
+  --bronze: #a8602a; --silver: #6f7d95; --gold: #b8860b; --plat: #178f80; --diamond: #6b48e6; color-scheme: light } }
+:root[data-theme="light"] {
+  --bg: #eef1f7; --panel: #ffffff; --panel2: #f4f6fb; --ink: #121a2c; --muted: #56627c; --line: #d3dae6;
+  --boost: #e8610f; --boost-soft: #fde3d2; --good: #1a8a4c; --good-soft: #d9f1e3; --bad: #c43535; --bad-soft: #f8dddd;
+  --bronze: #a8602a; --silver: #6f7d95; --gold: #b8860b; --plat: #178f80; --diamond: #6b48e6; color-scheme: light }
+
+body { background: var(--bg); color: var(--ink); font: 16px/1.5 var(--f-body); }
+html, body { overflow-x: hidden; }
+.wrap, .view, .card, .speech, .prose, .mission, .skill, .trophy { overflow-wrap: anywhere; }
+.wrap > *, .view > * { min-width: 0; max-width: 100%; }
+.wrap { max-width: 860px; margin: 0 auto; padding-block: 20px 56px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: flex; flex-direction: column; gap: 20px; }
+h1, h2, h3 { font-family: var(--f-display); margin: 0; text-wrap: balance; letter-spacing: .01em; }
+h1 { font-size: 1.9rem; line-height: 1.05; }
+h2 { font-size: .95rem; text-transform: uppercase; letter-spacing: .12em; color: var(--muted); }
+h3 { font-size: 1.15rem; }
+p { margin: 0; }
+a { color: var(--plat); }
+.num { font-family: var(--f-mono); font-variant-numeric: tabular-nums; }
+.label { font-family: var(--f-display); font-size: .74rem; text-transform: uppercase; letter-spacing: .12em; color: var(--muted); }
+.sec { display: flex; flex-direction: column; gap: 10px; }
+.view { display: flex; flex-direction: column; gap: 20px; min-width: 0; }
+button { font: 600 .95rem var(--f-body); border-radius: 8px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); padding: 10px 16px; cursor: pointer; }
+button:hover { border-color: var(--plat); }
+button:focus-visible, .node button:focus-visible { outline: 3px solid var(--plat); outline-offset: 2px; }
+button.go { background: var(--boost); border-color: var(--boost); color: #fff; font-family: var(--f-display); letter-spacing: .06em; text-transform: uppercase; padding: 12px 22px; clip-path: polygon(8px 0, 100% 0, calc(100% - 8px) 100%, 0 100%); border-radius: 0; }
+button.go:hover { filter: brightness(1.1); }
+button.ghost { background: transparent; }
+button.icon { padding: 8px 10px; line-height: 1; }
+button:disabled { opacity: .5; cursor: default; }
+
+/* tiers */
+.t-bronze { --tier: var(--bronze); } .t-silver { --tier: var(--silver); } .t-gold { --tier: var(--gold); } .t-plat { --tier: var(--plat); } .t-diamond { --tier: var(--diamond); }
+.hex { width: 1em; height: 1em; display: inline-block; vertical-align: middle; }
+.hex polygon { fill: var(--tier); }
+.hex text { font: 700 34px var(--f-mono); fill: var(--bg); text-anchor: middle; dominant-baseline: central; }
+
+/* HUD */
+.hud { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 18px; align-items: center; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 16px; position: relative; overflow: hidden; }
+.hud::after { content: ""; position: absolute; inset: auto 0 0 0; height: 3px; background: linear-gradient(90deg, var(--tier), transparent); }
+.badge { width: 84px; height: 120px; position: relative; filter: drop-shadow(0 0 10px color-mix(in srgb, var(--tier) 45%, transparent)); }
+#avatar, #flame { position: absolute; inset: 0; width: 84px; height: 120px; image-rendering: pixelated; image-rendering: crisp-edges; }
+#flame { opacity: .85; }
+#avatar { animation: bob 2.4s ease-in-out infinite; }
+#pet { position: absolute; right: -16px; bottom: 0; width: 24px; height: 24px; image-rendering: pixelated; image-rendering: crisp-edges; animation: bob 1.8s ease-in-out infinite; }
+@keyframes bob { 0%, 100% { transform: translateY(0) } 50% { transform: translateY(-4px) } }
+.hud-meta { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.hud-meta h1 { color: var(--tier); }
+.boost { display: flex; flex-direction: column; gap: 4px; }
+.cells { display: flex; gap: 3px; }
+.cells i { flex: 1; height: 12px; background: var(--line); transform: skewX(-18deg); border-radius: 2px; }
+.cells i.on { background: var(--boost); box-shadow: 0 0 6px color-mix(in srgb, var(--boost) 60%, transparent); }
+.row { display: flex; justify-content: space-between; gap: 8px; font-size: .82rem; color: var(--muted); }
+.side { display: flex; flex-direction: column; gap: 8px; align-items: flex-end; }
+.chip { font: 600 .82rem var(--f-mono); padding: 5px 10px; border-radius: 6px; background: var(--boost-soft); color: var(--boost); white-space: nowrap; }
+.chip.cold { background: var(--panel2); color: var(--muted); }
+.xp-float { position: absolute; left: 110px; top: 10px; font: 700 1.1rem var(--f-mono); color: var(--boost); animation: rise 1.2s ease-out forwards; pointer-events: none; }
+@keyframes rise { from { opacity: 1; transform: translateY(0) } to { opacity: 0; transform: translateY(-36px) } }
+
+/* today's run */
+.today { display: grid; grid-template-columns: auto repeat(3, minmax(0, 1fr)); gap: 12px; align-items: center; background: var(--panel2); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; }
+.today .label { white-space: nowrap; }
+.goal { display: flex; flex-direction: column; gap: 4px; min-width: 0; font-size: .85rem; }
+.goal .bar { height: 6px; }
+.goal.hit { color: var(--good); }
+
+/* mission */
+.mission { background: linear-gradient(135deg, var(--panel), var(--panel2)); border: 1px solid var(--line); border-left: 4px solid var(--boost); border-radius: 10px; padding: 18px; display: flex; flex-wrap: wrap; gap: 12px 20px; align-items: center; justify-content: space-between; }
+.mission > div { min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.acts { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+
+/* skill cards */
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(230px, 100%), 1fr)); gap: 12px; }
+.skill { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px; display: grid; grid-template-columns: 44px minmax(0, 1fr); gap: 6px 12px; align-items: center; }
+.skill .hex { width: 44px; height: 44px; grid-row: span 2; }
+.skill h3 { font-size: 1rem; min-width: 0; }
+.skill .tag { grid-column: 2; }
+.skill .bars { grid-column: 1 / -1; display: flex; flex-direction: column; gap: 6px; margin-top: 4px; }
+.tag { font: 500 .7rem var(--f-display); text-transform: uppercase; letter-spacing: .1em; color: var(--muted); }
+.bar { height: 8px; border-radius: 99px; background: var(--line); overflow: hidden; }
+.bar i { display: block; height: 100%; background: var(--tier, var(--plat)); border-radius: inherit; transition: width .5s; }
+.bar.sharp i { background: var(--good); }
+.bar.sharp.dull i { background: var(--boost); }
+
+/* topics + quest path */
+.list { display: flex; flex-direction: column; gap: 8px; }
+.tile { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; display: flex; gap: 12px; align-items: center; justify-content: space-between; cursor: pointer; text-align: left; width: 100%; font: inherit; color: inherit; }
+.tile:hover { border-color: var(--plat); }
+.tile > div { min-width: 0; }
+.tile small { color: var(--muted); display: block; }
+.pips { display: flex; gap: 4px; flex-shrink: 0; }
+.pips i { width: 12px; height: 12px; border-radius: 2px; background: var(--line); transform: skewX(-15deg); }
+.pips i.on { background: var(--good); }
+.pips i.now { background: var(--boost); }
+.path { list-style: none; margin: 0; padding: 0; position: relative; display: flex; flex-direction: column; gap: 10px; }
+.path::before { content: ""; position: absolute; left: 19px; top: 20px; bottom: 20px; width: 2px; background: var(--line); }
+.node button { width: 100%; display: grid; grid-template-columns: 40px minmax(0, 1fr) auto; gap: 12px; align-items: center; text-align: left; padding: 10px 12px 10px 8px; font: inherit; }
+.node .dot { width: 40px; height: 40px; border-radius: 50%; display: grid; place-content: center; font: 700 .9rem var(--f-mono); background: var(--panel2); border: 2px solid var(--line); color: var(--muted); position: relative; z-index: 1; }
+.node.done .dot { background: var(--good); border-color: var(--good); color: var(--bg); }
+.node.now .dot { border-color: var(--boost); color: var(--boost); animation: pulse 1.6s ease-in-out infinite; }
+.node.now button { border-color: var(--boost); }
+.node.locked button { opacity: .55; cursor: default; }
+.node.locked button:hover { border-color: var(--line); }
+.node small { color: var(--muted); display: block; }
+.node .meta { font: 600 .78rem var(--f-mono); color: var(--muted); white-space: nowrap; }
+@keyframes pulse { 0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--boost) 50%, transparent) } 50% { box-shadow: 0 0 0 8px transparent } }
+
+/* quest */
+.back { align-self: flex-start; }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 18px; display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.card.done { border-color: color-mix(in srgb, var(--good) 50%, var(--line)); }
+.prose { display: flex; flex-direction: column; gap: 10px; max-width: 65ch; }
+.prose code { font: .88em var(--f-mono); background: var(--panel2); border: 1px solid var(--line); padding: 1px 5px; border-radius: 4px; }
+.prose pre { margin: 0; overflow-x: auto; background: var(--panel2); border: 1px solid var(--line); border-radius: 8px; padding: 12px; font: .85rem/1.5 var(--f-mono); }
+.prose pre code { background: none; border: 0; padding: 0; }
+.step { display: flex; align-items: center; gap: 10px; }
+.step b { font: 700 .8rem var(--f-mono); width: 28px; height: 28px; border-radius: 6px; display: grid; place-content: center; background: var(--panel2); border: 1px solid var(--line); color: var(--muted); flex-shrink: 0; }
+.step.done b { background: var(--good); border-color: var(--good); color: var(--bg); }
+fieldset { border: 0; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+legend { font-weight: 600; margin-bottom: 6px; padding: 0; }
+.opt { display: flex; gap: 10px; align-items: flex-start; border: 1px solid var(--line); border-radius: 8px; padding: 9px 12px; cursor: pointer; }
+.opt input { margin-top: 4px; accent-color: var(--plat); }
+.opt.right { border-color: var(--good); background: var(--good-soft); }
+.opt.wrong { border-color: var(--bad); background: var(--bad-soft); }
+.why { font-size: .88rem; color: var(--muted); }
+.result { font-family: var(--f-display); font-size: 1.1rem; }
+.result.pass { color: var(--good); } .result.fail { color: var(--bad); }
+
+/* review flip card */
+.fc { perspective: 1000px; min-height: 200px; }
+.fc-in { display: grid; min-height: 200px; transition: transform .5s; transform-style: preserve-3d; }
+.fc.flipped .fc-in { transform: rotateY(180deg); }
+.face { grid-area: 1 / 1; backface-visibility: hidden; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 20px; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; }
+.face.b { transform: rotateY(180deg); border-color: var(--plat); }
+.face .prose { align-items: center; }
+
+/* history */
+.hist { display: flex; flex-direction: column; gap: 6px; }
+.hist div { display: grid; grid-template-columns: 76px minmax(0, 1fr) auto; gap: 10px; font-size: .88rem; padding: 6px 0; border-bottom: 1px solid var(--line); }
+.hist .num { color: var(--muted); }
+.hist .xp { color: var(--boost); font-weight: 700; }
+
+.empty { border: 2px dashed var(--line); border-radius: 10px; padding: 22px; color: var(--muted); display: flex; flex-direction: column; gap: 6px; }
+.empty b { color: var(--ink); font-family: var(--f-display); }
+.toast { position: fixed; left: 50%; bottom: calc(20px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); background: var(--ink); color: var(--bg); padding: 10px 16px; border-radius: 8px; font: 600 .9rem var(--f-body); z-index: 30; max-width: calc(100% - 32px); }
+
+/* overlay */
+.overlay { position: fixed; inset: 0; background: color-mix(in srgb, var(--bg) 82%, transparent); display: grid; place-content: center; z-index: 25; padding: 16px; }
+.modal { background: var(--panel); border: 1px solid var(--tier, var(--line)); border-radius: 14px; padding: 28px 28px 22px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 10px; max-width: 360px; animation: pop .35s cubic-bezier(.2, 1.4, .4, 1); box-shadow: 0 0 40px color-mix(in srgb, var(--tier, var(--boost)) 30%, transparent); }
+.modal .hex { width: 84px; height: 84px; }
+.modal p { max-width: 30ch; font-style: italic; }
+.modal h2 { color: var(--tier, var(--boost)); font-size: 1.5rem; letter-spacing: .04em; text-transform: none; }
+.big-award img { width: 96px; height: 96px; }
+.modal .xp { font: 700 2rem var(--f-mono); color: var(--boost); }
+@keyframes pop { from { transform: scale(.6); opacity: 0 } to { transform: scale(1); opacity: 1 } }
+#fx { position: fixed; inset: 0; pointer-events: none; z-index: 26; }
+
+@media (max-width: 560px) { .hud { grid-template-columns: auto 1fr; } .side { grid-column: 1 / -1; flex-direction: row; justify-content: space-between; align-items: center; } .today { grid-template-columns: repeat(2, minmax(0, 1fr)); } .today .label { grid-column: 1 / -1; } h1 { font-size: 1.5rem; } .badge { width: 72px; height: 72px; } .xp-float { left: 90px; } }
+.spips { display: flex; gap: 6px; flex-wrap: wrap; }
+.spip { width: 34px; height: 34px; padding: 0; border-radius: 8px; font: 700 .85rem var(--f-mono); display: grid; place-content: center; }
+.spip.done { background: var(--good-soft); border-color: var(--good); color: var(--good); }
+.spip.now { border-color: var(--boost); color: var(--boost); }
+.spip.locked { opacity: .45; }
+.spip.sel { outline: 2px solid var(--plat); outline-offset: 2px; }
+.mission-card { border-color: color-mix(in srgb, var(--boost) 45%, var(--line)); }
+.editor { width: 100%; box-sizing: border-box; font: .9rem/1.55 var(--f-mono); background: var(--panel2); color: var(--ink); border: 1px solid var(--line); border-radius: 8px; padding: 12px; resize: vertical; tab-size: 2; }
+.editor:focus { outline: 2px solid var(--plat); outline-offset: 1px; }
+.results { overflow-x: auto; max-height: 360px; overflow-y: auto; border: 1px solid var(--line); border-radius: 8px; }
+.results table { border-collapse: collapse; font: .82rem var(--f-mono); font-variant-numeric: tabular-nums; width: max-content; min-width: 100%; }
+.results th { position: sticky; top: 0; background: var(--panel2); text-align: left; padding: 6px 10px; border-bottom: 1px solid var(--line); color: var(--muted); font-weight: 700; }
+.results td { padding: 5px 10px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+.schema { background: var(--panel2); border: 1px solid var(--line); border-radius: 8px; padding: 8px 12px; font-size: .88rem; }
+.schema summary { cursor: pointer; font-weight: 600; }
+.schema p { margin: 8px 0 0; line-height: 1.9; }
+.schema code { font: .8rem var(--f-mono); background: var(--panel); border: 1px solid var(--line); padding: 1px 5px; border-radius: 4px; }
+.hint-box { background: var(--boost-soft); border-radius: 8px; padding: 10px 12px; font-size: .92rem; }
+.hint-box code { font: .85em var(--f-mono); }
+.fb { font-family: var(--f-display); font-size: 1rem; margin: 0; }
+.fb.pass { color: var(--good); } .fb.fail { color: var(--bad); }
+.upload { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; background: var(--panel2); border: 1px dashed var(--line); border-radius: 8px; padding: 12px; }
+.upload input { max-width: 100%; font: inherit; color: var(--ink); }
+.upload p { flex-basis: 100%; }
+.shelf { display: flex; flex-wrap: wrap; gap: 4px; align-items: flex-end; min-height: 30px; }
+.px { image-rendering: pixelated; image-rendering: crisp-edges; flex-shrink: 0; }
+.px.locked { opacity: .55; }
+.shelf .shelf-btn { padding: 4px 8px; font: 600 .75rem var(--f-mono); color: var(--muted); }
+.trophies { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(250px, 100%), 1fr)); gap: 10px; }
+.trophy { display: grid; grid-template-columns: 64px minmax(0, 1fr); gap: 12px; align-items: start; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 12px; }
+.trophy > div { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+.trophy.on { border-color: color-mix(in srgb, var(--gold) 55%, var(--line)); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--gold) 20%, transparent); }
+.trophy.off b { color: var(--muted); }
+.trophy .need { font-size: .85rem; margin: 0; }
+.trophy .lore { font-style: italic; font-size: .88rem; margin: 0; color: var(--ink); }
+.trophy .lore.dim { color: var(--muted); font-style: normal; font-size: .8rem; }
+.trophy .bar { height: 6px; }
+.trophy .bar i { background: var(--gold); }
+.shelf .more { font: 600 .75rem var(--f-mono); color: var(--muted); align-self: center; }
+.ladder { grid-column: 1 / -1; display: flex; gap: 4px; }
+.ladder i { flex: 1; height: 10px; background: var(--line); transform: skewX(-18deg); border-radius: 2px; }
+.ladder i.on { background: var(--tier); box-shadow: 0 0 6px color-mix(in srgb, var(--tier) 50%, transparent); }
+.skill .bench { color: var(--muted); font-size: .82rem; }
+.next-rank { grid-column: 1 / -1; display: flex; flex-direction: column; gap: 8px; background: var(--panel2); border: 1px dashed var(--line); border-radius: 8px; padding: 10px; font-size: .85rem; }
+.next-rank p { margin: 0; }
+.next-rank button { align-self: flex-start; }
+.trial-bar { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 10px 14px; position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; }
+.trial-bar .clock { font: 700 1.1rem var(--f-mono); }
+.trial-bar .clock.low { color: var(--bad); }
+.tres { display: flex; flex-direction: column; gap: 6px; }
+.tres div { display: flex; gap: 10px; align-items: baseline; font-size: .9rem; }
+.tres b.ok { color: var(--good); } .tres b.no { color: var(--bad); }
+.board { display: grid; grid-template-columns: 110px minmax(0, 1fr); gap: 16px; align-items: start; background: linear-gradient(135deg, var(--panel), var(--panel2)); border: 1px solid var(--line); border-radius: 12px; padding: 16px; }
+.npc { display: flex; flex-direction: column; align-items: center; gap: 4px; text-align: center; }
+.npc canvas { width: 84px; height: 120px; image-rendering: pixelated; image-rendering: crisp-edges; animation: bob 2.8s ease-in-out infinite; }
+.npc b { font-family: var(--f-display); font-size: .9rem; }
+.speech { position: relative; background: var(--panel); border: 2px solid var(--ink); border-radius: 4px; padding: 14px; display: flex; flex-direction: column; gap: 10px; min-width: 0; box-shadow: 4px 4px 0 var(--line); }
+.speech::before { content: ""; position: absolute; left: -12px; top: 34px; border: 6px solid transparent; border-right-color: var(--ink); border-width: 6px 12px 6px 0; }
+.speech .say { font-size: 1rem; line-height: 1.55; min-height: 4.6em; margin: 0; cursor: pointer; }
+.reward { background: var(--panel2); border-radius: 8px; padding: 10px 12px; }
+.reward ul { margin: 4px 0 6px; padding-left: 18px; }
+.reward p { margin: 0; }
+.pager { display: inline-flex; align-items: center; gap: 4px; margin-left: auto; font-size: .85rem; color: var(--muted); }
+@media (max-width: 560px) { .board { grid-template-columns: minmax(0, 1fr); padding: 12px; } .chip { max-width: 100%; overflow: hidden; text-overflow: ellipsis; } .pager { margin-left: 0; } .npc { flex-direction: row; justify-content: flex-start; gap: 10px; } .npc canvas { width: 56px; height: 80px; } .speech::before { display: none; } }
+/* guide NPC that travels with a topic, Quest Log (main + side quests) */
+.g-sprite, .me-mini, .pix-npc { image-rendering: pixelated; image-rendering: crisp-edges; }
+.guide-bar { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 14px; align-items: center; }
+.guide-bar .npc canvas { width: 56px; height: 80px; }
+.guide-bar .npc b { font-size: .78rem; }
+.guide-bar .speech { padding: 10px 14px; box-shadow: 3px 3px 0 var(--line); }
+.guide-bar .speech::before { top: 50%; margin-top: -6px; }
+.guide-bar.pass .npc canvas { animation: hop .5s ease-out 2; }
+.guide-bar.combo .npc canvas { animation: hop .4s ease-out 4; }
+.guide-bar.fail .npc canvas { animation: shake .45s ease-in-out 1; }
+@keyframes hop { 0%, 100% { transform: translateY(0) } 40% { transform: translateY(-14px) } }
+@keyframes shake { 0%, 100% { transform: translateX(0) } 25% { transform: translateX(-5px) } 75% { transform: translateX(5px) } }
+.chip.combo { background: var(--good-soft); color: var(--good); }
+.qlog { display: flex; flex-direction: column; gap: 10px; }
+.qlog .mission { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; }
+.qlog .mission .g-sprite { width: 42px; height: 60px; }
+.qlog .mission.side { border-left-color: var(--plat); padding: 12px 16px; }
+.qlog .mission.side h3 { font-size: 1rem; }
+.qlog .mission .acts { flex-wrap: wrap; justify-content: flex-end; }
+@media (max-width: 560px) { .qlog .mission { grid-template-columns: auto minmax(0, 1fr); } .qlog .mission .acts { grid-column: 1 / -1; justify-content: flex-start; } }
+.me-mini { width: 21px; height: 30px; margin-left: auto; animation: bob 2.4s ease-in-out infinite; }
+.pix-npc { width: 84px; height: 120px; }
+@media (prefers-reduced-motion: reduce) { .guide-bar .npc canvas, .me-mini { animation: none !important; } }
+.confirm { display: flex; flex-direction: column; gap: 8px; border: 2px solid var(--boost); border-radius: 8px; padding: 12px; background: var(--boost-soft); }
+.confirm p { margin: 0; }
+.request { display: flex; flex-direction: column; gap: 6px; background: var(--panel); border: 1px dashed var(--line); border-radius: 10px; padding: 12px; }
+.request p { margin: 0; }
+.req-row { display: flex; gap: 8px; }
+.req-row input { flex: 1; min-width: 0; resize: none; }
+.req-to { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; font-size: 14px; }
+.req-to select { min-height: 36px; max-width: 100%; background: var(--bg); color: var(--ink); border: 1px solid var(--line); border-radius: 8px; padding: 4px 8px; font: inherit; }
+.req-files { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.req-files .file { display: inline-flex; align-items: center; gap: 4px; font-size: 13px; background: var(--bg); border: 1px solid var(--line); border-radius: 999px; padding: 2px 4px 2px 10px; max-width: 100%; }
+.req-files .file span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 200px; }
+.req-files .file button { min-height: 28px; min-width: 28px; padding: 0; }
+.why-card ul, .comm ul { margin: 4px 0 0; padding-left: 20px; }
+.why-card p { margin: 0 0 6px; }
+.place-card { border-color: color-mix(in srgb, var(--plat) 45%, var(--line)); }
+.place-card p { margin: 0; }
+.comm summary { cursor: pointer; }
+.srcs summary { cursor: pointer; }
+.deeper summary, .ask summary { cursor: pointer; font-weight: 600; }
+.deeper[open] summary, .ask[open] summary { margin-bottom: 4px; }
+.ask .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.ask .chips button { font-size: .85rem; padding: 6px 10px; }
+.ask .turn { border-left: 3px solid var(--line); padding-left: 10px; }
+.ask .turn.you { border-color: var(--boost); }
+.ask .turn .label { display: block; margin-bottom: 2px; }
+.srcs ul { margin: 6px 0 0; padding-left: 20px; font-size: .9rem; }
+.guide dl { margin: 0; display: grid; gap: 8px; }
+.guide dt { font-weight: 700; font-family: var(--f-display); }
+.guide dd { margin: 0 0 0 0; }
+.qfoot { display: flex; flex-direction: column; gap: 10px; border-top: 1px dashed var(--line); padding-top: 14px; }
+.qfoot p { margin: 0; }
+.skill .note { grid-column: 1 / -1; font-size: .85rem; color: var(--muted); }
+.skill .rust { grid-column: 1 / -1; display: flex; flex-direction: column; gap: 4px; font-size: .82rem; color: var(--boost); }
+.hint { font-size: .88rem; color: var(--muted); max-width: 65ch; }
+/* character creator: first open, and the HUD settings button */
+.creator { display: grid; grid-template-columns: 170px minmax(0, 1fr); gap: 18px; align-items: start; }
+.creator .stage { background: radial-gradient(circle at 50% 70%, color-mix(in srgb, var(--plat) 14%, var(--panel2)), var(--panel2)); border: 1px solid var(--line); border-radius: 12px; display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 16px; position: sticky; top: 12px; }
+.creator .stage canvas#cr-avatar { width: 112px; height: 160px; image-rendering: pixelated; image-rendering: crisp-edges; }
+.creator .stage b { font-family: var(--f-display); font-size: 1.1rem; }
+.cr-opts { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.cr-row { display: flex; flex-direction: column; gap: 6px; }
+.creator .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.creator .chips button { font-size: .85rem; padding: 6px 10px; background: var(--panel2); }
+.creator .chips button.on { border-color: var(--plat); box-shadow: inset 0 0 0 1px var(--plat); }
+.creator .chips button.sw { width: 30px; height: 30px; padding: 0; border-radius: 50%; }
+.creator .chips button.sw.on { outline: 2px solid var(--plat); outline-offset: 2px; }
+.cr-fig { position: relative; }
+.cr-fig .pet { position: absolute; right: -34px; bottom: 0; width: 30px; height: 30px; image-rendering: pixelated; image-rendering: crisp-edges; }
+.gear-slot { display: flex; flex-direction: column; gap: 4px; }
+.gear-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 6px; }
+.gear-it { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; text-align: left; font-size: .85rem; padding: 8px 10px; background: var(--panel2); min-width: 0; }
+.gear-it small { color: var(--muted); font-size: .76rem; }
+.gear-it.on { border-color: var(--plat); box-shadow: inset 0 0 0 1px var(--plat); }
+.gear-it.locked { opacity: .6; cursor: not-allowed; }
+@media (max-width: 560px) { .creator { grid-template-columns: minmax(0, 1fr); } .creator .stage { position: static; } .gear-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (prefers-reduced-motion: reduce) { .bar i, .fc-in { transition: none; } .node.now .dot, .modal, .xp-float, #avatar, #pet { animation: none; } }
+</style>
+
+<div class="wrap">
+  <header class="hud t-bronze" id="hud">
+    <div class="badge"><canvas id="flame" width="14" height="20" aria-hidden="true"></canvas><canvas id="avatar" width="14" height="20" aria-label="Your character"></canvas><canvas id="pet" class="pet" width="6" height="6" aria-hidden="true" hidden></canvas></div>
+    <div class="hud-meta">
+      <span class="label" id="who">Skill Tree</span>
+      <h1 id="rank">Rookie</h1>
+      <div class="shelf" id="shelf" aria-label="Trophy cabinet"></div>
+      <div class="boost"><div class="cells" id="cells" aria-hidden="true"></div>
+        <div class="row"><span class="num"><b id="g-xp">0</b> XP</span><span class="num" id="to-next"></span></div></div>
+    </div>
+    <div class="side"><span class="chip num" id="streak">0-day streak</span><div class="acts"><button class="icon ghost" id="b-look" aria-label="Edit your character" title="Your character">⚙</button><button class="icon ghost" id="b-mute" aria-label="Toggle sound">🔊</button></div></div>
+  </header>
+  <section class="today" id="today" aria-label="Today's run"></section>
+  <main id="view" class="view"></main>
+</div>
+<canvas id="fx" hidden></canvas>
+
+<script>
+const RANKS = [[0, 'Rookie', 'bronze', 'I'], [500, 'Contender', 'silver', 'II'], [2000, 'Challenger', 'gold', 'III'], [5000, 'Champion', 'plat', 'IV'], [10000, 'Legend', 'diamond', 'V']];
+const GAPS = [1, 3, 7, 14, 30, 60];
+const XP = { quiz: 25, flawless: 10, quest: 50, card: 5, step: 5, project: 200, topic: 100, trial: 100 };
+const CELLS = 20;
+const S = { db: null, player: {}, stats: [], topics: [], cards: [], trials: [], offers: [], requests: [], board: { idx: 0 }, log: [], loaded: false, view: { name: 'home' }, quiz: {}, sbx: {}, ask: {}, sample: null };
+
+const $ = (sel, el = document) => el.querySelector(sel);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const ymd = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+const today = () => ymd(new Date());
+const addDays = (n, from = new Date()) => { const d = new Date(from); d.setDate(d.getDate() + n); return ymd(d); };
+// A failed Rank Trial locks that level for TRIAL_WAIT days. Returns the retry date while locked, else null.
+const TRIAL_WAIT = 3;
+const retryOn = (st, lv) => { const f = (st?.trialFails || {})[lv]; if (!f) return null; const d = addDays(TRIAL_WAIT, new Date(f + 'T12:00:00')); return d > today() ? d : null; };
+const dayName = d => new Date(d + 'T12:00:00').toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'short' });
+const reduced = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+// Short explainer text: paragraphs, `code`, ```blocks```, **bold**.
+function prose(src) {
+  const parts = String(src || '').split(/```(?:\w+)?\n?([\s\S]*?)```/);
+  return parts.map((p, i) => i % 2 ? `<pre><code>${esc(p.trim())}</code></pre>` :
+    p.split(/\n\s*\n/).filter(x => x.trim()).map(x => `<p>${esc(x.trim()).replace(/`([^`]+)`/g, '<code>$1</code>').replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>').replace(/\[\[(https:\/\/[^\]]+)\]\]/g, '<a href="$1" target="_blank" rel="noopener">$1</a>').replace(/\n/g, '<br>')}</p>`).join('')
+  ).join('');
+}
+const hex = (txt, cls = '') => `<svg class="hex ${cls}" viewBox="0 0 100 100" aria-hidden="true"><polygon points="50,3 93,27 93,73 50,97 7,73 7,27"/><text x="50" y="52">${esc(txt)}</text></svg>`;
+
+// ---------- game maths (mirrors references/game-rules.md) ----------
+function levelOf(xp) {
+  let l = 1, need = 100, left = xp || 0;
+  while (left >= need) { left -= need; l++; need = 100 * l; }
+  return { l, into: left, need };
+}
+// Mastery (1-7) is proven by Rank Trials only. XP is practice and drives the player rank.
+const tierOfMastery = m => m >= 7 ? 'diamond' : m >= 6 ? 'plat' : m >= 5 ? 'gold' : m >= 3 ? 'silver' : 'bronze';
+const tierOfLevel = l => l >= 10 ? 'diamond' : l >= 7 ? 'plat' : l >= 5 ? 'gold' : l >= 3 ? 'silver' : 'bronze';
+function rankOf(xp) {
+  let i = 0; while (i + 1 < RANKS.length && xp >= RANKS[i + 1][0]) i++;
+  return { idx: i, name: RANKS[i][1], tier: RANKS[i][2], num: RANKS[i][3], from: RANKS[i][0], next: RANKS[i + 1] };
+}
+const dueCards = () => S.cards.filter(c => c.due && c.due <= today());
+const hashStr = x => [...x].reduce((h, ch) => (h * 31 + ch.charCodeAt(0)) | 0, 7);
+const mixedDue = () => dueCards().sort((a, b) => hashStr(a.id + today()) - hashStr(b.id + today()));
+function sharpness(statId) {
+  const overdue = S.cards.filter(c => c.stat === statId && c.due && c.due < today()).length;
+  return Math.max(50, 100 - 10 * overdue);
+}
+const passMark = n => Math.ceil(n * 2 / 3);
+const unlocked = (t, i) => i === 0 || !!(t.quests[i - 1] || {}).completedOn;
+// Offered topics wait on the Quest Board. Accepted ones run side by side: one main quest, the rest side quests.
+const isActive = t => !t.status || t.status === 'active';
+function questLine() {
+  const act = S.topics.filter(isActive), main = act.find(t => t.id === S.player.activeTopic) || act[0];
+  return [main, ...act.filter(t => t !== main)].filter(Boolean)
+    .map(t => ({ topic: t, quest: (t.quests || []).find(q => !q.completedOn), main: t === main })).filter(x => x.quest);
+}
+const nextQuest = () => questLine()[0] || null;
+const untouched = t => !(t.quests || []).some(q => q.completedOn || (q.stepsDone || 0) > 0 || q.taskDone || (q.quizBest || 0) > 0);
+function todayRun() {
+  const p = S.player, t = today();
+  const cards = p.cardsOn === t ? (p.cardsToday || 0) : 0;
+  const quests = S.topics.reduce((n, tp) => n + (tp.quests || []).filter(q => q.completedOn === t).length, 0);
+  return { cards, quests, counted: p.lastActiveOn === t };
+}
+
+// ---------- feedback: toast, float, sound, confetti, overlays ----------
+function toast(msg) {
+  const t = document.createElement('div'); t.className = 'toast'; t.textContent = msg; t.setAttribute('role', 'status');
+  document.body.appendChild(t); setTimeout(() => t.remove(), 2600);
+}
+function floatXp(xp) {
+  const f = document.createElement('span'); f.className = 'xp-float'; f.textContent = `+${xp} XP`;
+  $('#hud').appendChild(f); setTimeout(() => f.remove(), 1300);
+}
+const sfx = (() => {
+  let ctx; const muted = () => { try { return localStorage.getItem('st-mute') === '1'; } catch { return false; } };
+  function tone(f, d, type = 'square', g = .04) {
+    if (muted()) return;
+    try {
+      ctx = ctx || new (window.AudioContext || window.webkitAudioContext)();
+      const o = ctx.createOscillator(), v = ctx.createGain();
+      o.type = type; o.frequency.value = f; v.gain.value = g;
+      o.connect(v); v.connect(ctx.destination); o.start();
+      v.gain.exponentialRampToValueAtTime(.0001, ctx.currentTime + d); o.stop(ctx.currentTime + d);
+    } catch (e) { /* no audio here */ }
+  }
+  const seq = (fs, d, step, type) => fs.forEach((f, i) => setTimeout(() => tone(f, d, type), i * step));
+  return { muted,
+    flip: () => tone(520, .08, 'sine'), card: () => tone(740, .1, 'sine'),
+    pass: () => seq([660, 880], .12, 90), fail: () => tone(180, .25, 'sawtooth', .025),
+    clear: () => seq([523, 659, 784, 1046], .18, 90, 'triangle'), level: () => seq([392, 523, 659, 784, 1046], .22, 100, 'triangle'),
+    toggle: () => { try { localStorage.setItem('st-mute', muted() ? '0' : '1'); } catch (e) { /* ignore */ } } };
+})();
+function confetti() {
+  if (reduced()) return;
+  const c = $('#fx'), ctx = c.getContext('2d');
+  c.width = innerWidth; c.height = innerHeight; c.hidden = false;
+  const cols = ['#ff7a1a', '#3ddc84', '#5fe3d0', '#f2c14e', '#a98bff'];
+  const ps = Array.from({ length: 120 }, () => ({ x: c.width / 2, y: c.height / 2, vx: (Math.random() - .5) * 16, vy: -Math.random() * 14 - 4, r: Math.random() * 6 + 3, a: Math.random() * 6, col: cols[Math.random() * cols.length | 0] }));
+  const t0 = performance.now();
+  (function frame(t) {
+    const k = (t - t0) / 1400; ctx.clearRect(0, 0, c.width, c.height);
+    for (const p of ps) { p.x += p.vx; p.y += p.vy; p.vy += .35; p.a += .2; ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.a); ctx.globalAlpha = Math.max(0, 1 - k); ctx.fillStyle = p.col; ctx.fillRect(-p.r / 2, -p.r / 2, p.r, p.r * .6); ctx.restore(); }
+    if (k < 1) requestAnimationFrame(frame); else { ctx.clearRect(0, 0, c.width, c.height); c.hidden = true; }
+  })(t0);
+}
+const ovQ = []; let ovOpen = false;
+function celebrate(o) { ovQ.push(o); if (!ovOpen) nextOverlay(); }
+function nextOverlay() {
+  const o = ovQ.shift(); if (!o) { ovOpen = false; return; }
+  ovOpen = true;
+  const el = document.createElement('div'); el.className = 'overlay'; el.setAttribute('role', 'dialog');
+  const then = o.then;
+  el.innerHTML = `<div class="modal t-${o.tier || 'bronze'}">${o.art ? `<div class="big-award">${o.art}</div>` : o.badge ? hex(o.badge) : ''}<span class="label">${esc(o.kicker)}</span><h2>${esc(o.title)}</h2>${o.sub ? `<p>${esc(o.sub)}</p>` : ''}${o.xp ? `<span class="xp">+${o.xp} XP</span>` : ''}<button class="go" id="ov-ok">${esc(o.ok || 'Nice')}</button></div>`;
+  document.body.appendChild(el);
+  (o.sound || sfx.clear)(); if (o.confetti) confetti();
+  const close = () => { el.remove(); nextOverlay(); if (then) then(); };
+  $('#ov-ok', el).onclick = close; el.onclick = e => { if (e.target === el) close(); };
+  $('#ov-ok', el).focus();
+}
+
+// ---------- writes (one at a time per doc) ----------
+async function write(path, data, create) {
+  if (!S.db) { toast('Progress can\'t be saved here. Open the page signed in.'); throw new Error('no db'); }
+  const ref = S.db.doc(path);
+  return create ? ref.set(data) : ref.update(data);
+}
+async function logEvent(type, topic, xp, note) {
+  const ref = S.db.doc('log/' + today().slice(0, 7));
+  const snap = await ref.get();
+  const entries = snap.exists ? [...(snap.data().entries || [])] : [];
+  entries.push({ on: today(), type, topic: topic || null, xp, note: note || '' });
+  await ref.set({ entries });
+}
+// Returns level-up / rank-up info so the caller can show it after its own overlay.
+async function award(statId, xp, type, topicId, note) {
+  const out = { levelUp: null, rankUp: null };
+  const st = S.stats.find(s => s.id === statId);
+  if (st) { st.xp = (st.xp || 0) + xp; await write('stats/' + statId, { xp: st.xp }); }
+  const p = S.player, before = rankOf(p.xp || 0).idx, nxp = (p.xp || 0) + xp;
+  await write('player/me', { ...(p.exists ? {} : { streak: 0, bestStreak: 0 }), xp: nxp }, !p.exists);
+  p.xp = nxp; p.exists = true;
+  const r = rankOf(nxp); if (r.idx > before) out.rankUp = r;
+  await logEvent(type, topicId, xp, note);
+  floatXp(xp);
+  return out;
+}
+function showUps(up) {
+  if (up.levelUp) celebrate({ kicker: 'Level up', title: `${up.levelUp.stat} L${up.levelUp.l}`, badge: 'L' + up.levelUp.l, tier: tierOfLevel(up.levelUp.l), sound: sfx.level, confetti: true, ok: 'Keep going' });
+  if (up.rankUp) celebrate({ kicker: 'Rank up', title: up.rankUp.name, sub: `${up.rankUp.from.toLocaleString('en-GB')} XP. New badge unlocked.`, badge: up.rankUp.num, tier: up.rankUp.tier, sound: sfx.level, confetti: true, ok: 'Let\'s go' });
+}
+// A day counts after a quest or 3+ review cards. One rest day per 7.
+async function markActive(kind) {
+  const p = S.player, t = today();
+  const cardsToday = p.cardsOn === t ? (p.cardsToday || 0) : 0;
+  const patch = {};
+  if (kind === 'card') { patch.cardsOn = t; patch.cardsToday = cardsToday + 1; }
+  const counts = kind === 'quest' || (kind === 'card' && cardsToday + 1 >= 3);
+  let dayCounted = false;
+  if (counts && p.lastActiveOn !== t) {
+    let streak = 1;
+    if (p.lastActiveOn === addDays(-1)) streak = (p.streak || 0) + 1;
+    else if (p.lastActiveOn === addDays(-2) && (!p.restUsedOn || p.restUsedOn < addDays(-7))) { streak = (p.streak || 0) + 1; patch.restUsedOn = addDays(-1); }
+    Object.assign(patch, { streak, lastActiveOn: t, bestStreak: Math.max(streak, p.bestStreak || 0) });
+    dayCounted = true;
+  }
+  if (Object.keys(patch).length) { await write('player/me', patch, !p.exists); Object.assign(p, patch, { exists: true }); }
+  return dayCounted;
+}
+
+// ---------- pixel character: made in the creator, gains gear as rank rises ----------
+// 14 x 20 grid. buildSprite(look) gives the body; gear letters come from rank: c crown, r headband (tier), k cape (tier, drawn behind the body).
+// Body letters: h hair, H light hair, s skin, e eye, o outfit, d outfit shade, w white, p trousers, b boots, g glasses, a/A headphones.
+const LOOKS = {
+  hair: ['Short', 'Afro', 'Long', 'Bun', 'Spiky', 'Buzz', 'Headscarf'],
+  hairColor: ['#1a1210', '#4a2e1c', '#8a5a2b', '#d9b26a', '#b8422e', '#c9c9d1', '#5b6cff'],
+  skin: ['#f5d3b3', '#e8b98f', '#c68a5e', '#a26a42', '#8d5a3b', '#5c3a24'],
+  outfit: ['Jersey', 'Hoodie', 'Shirt & tie', 'Lab coat'],
+  outfitColor: ['#c8103e', '#2f6fde', '#1f9d55', '#f2c14e', '#7a4ff0', '#222831', '#ff7a1a'],
+  extra: ['None', 'Glasses', 'Cap', 'Headphones'],
+};
+const LOOK_LABELS = { hair: 'Hair', hairColor: 'Hair colour', skin: 'Skin', outfit: 'Outfit', outfitColor: 'Outfit colour', extra: 'Extra' };
+const DEFAULT_LOOK = { hair: 'Short', hairColor: '#1a1210', skin: '#c68a5e', outfit: 'Hoodie', outfitColor: '#2f6fde', extra: 'None' };
+function cleanLook(l) { const o = {}; for (const k of Object.keys(LOOKS)) o[k] = LOOKS[k].includes(l?.[k]) ? l[k] : DEFAULT_LOOK[k]; return o; }
+function buildSprite(look) {
+  const L = cleanLook(look), G = Array.from({ length: 20 }, () => new Array(14).fill('.'));
+  const p = (x, y, ch) => { if (x >= 0 && x < 14 && y >= 0 && y < 20) G[y][x] = ch; };
+  const R = (x0, x1, y0, y1, ch) => { for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) p(x, y, ch); };
+  const h = L.hair, f = L.outfit, afro = h === 'Afro';
+  R(4, 9, 4, 8, 's'); R(5, 8, 9, 9, 's');
+  if (afro) { R(4, 9, 1, 1, 'h'); R(3, 10, 2, 2, 'h'); R(2, 11, 3, 4, 'h'); R(2, 3, 5, 6, 'h'); R(10, 11, 5, 6, 'h'); p(3, 7, 'h'); p(10, 7, 'h'); }
+  if (h === 'Short' || h === 'Long' || h === 'Bun') { R(4, 9, 2, 2, 'h'); R(3, 10, 3, 3, 'h'); p(3, 4, 'h'); p(10, 4, 'h'); }
+  if (h === 'Long') { R(3, 3, 4, 11, 'h'); R(10, 10, 4, 11, 'h'); }
+  if (h === 'Bun') R(6, 7, 0, 1, 'h');
+  if (h === 'Spiky') { p(4, 1, 'h'); p(6, 1, 'h'); p(8, 1, 'h'); R(4, 9, 2, 2, 'h'); R(3, 10, 3, 3, 'h'); p(3, 4, 'h'); p(10, 4, 'h'); }
+  if (h === 'Buzz') { R(4, 9, 3, 3, 'H'); p(3, 4, 'H'); p(10, 4, 'H'); }
+  if (h === 'Headscarf') { R(4, 9, 1, 1, 'h'); R(3, 10, 2, 3, 'h'); R(3, 3, 4, 9, 'h'); R(10, 10, 4, 9, 'h'); R(4, 9, 9, 9, 'h'); }
+  p(5, 6, 'e'); p(8, 6, 'e');
+  if (f === 'Jersey') { R(4, 9, 10, 14, 'o'); p(5, 10, 'w'); p(8, 10, 'w'); R(3, 3, 11, 12, 's'); R(10, 10, 11, 12, 's'); R(4, 9, 15, 15, 'd'); R(4, 5, 16, 16, 's'); R(8, 9, 16, 16, 's'); }
+  if (f === 'Hoodie') { R(3, 10, 10, 10, 'd'); R(4, 9, 11, 14, 'o'); R(3, 3, 11, 13, 'o'); R(10, 10, 11, 13, 'o'); R(5, 8, 13, 13, 'd'); R(4, 5, 15, 16, 'p'); R(8, 9, 15, 16, 'p'); }
+  if (f === 'Shirt & tie') { R(4, 9, 10, 14, 'w'); R(6, 7, 10, 13, 'o'); R(3, 3, 11, 12, 'w'); R(10, 10, 11, 12, 'w'); p(3, 13, 's'); p(10, 13, 's'); R(4, 5, 15, 16, 'p'); R(8, 9, 15, 16, 'p'); }
+  if (f === 'Lab coat') { R(4, 9, 10, 15, 'w'); R(6, 7, 10, 12, 'o'); R(3, 3, 11, 13, 'w'); R(10, 10, 11, 13, 'w'); p(3, 14, 's'); p(10, 14, 's'); R(4, 5, 16, 16, 'p'); R(8, 9, 16, 16, 'p'); }
+  R(4, 5, 17, 17, 'b'); R(8, 9, 17, 17, 'b'); R(3, 5, 18, 18, 'b'); R(8, 10, 18, 18, 'b');
+  if (L.extra === 'Glasses') { p(4, 6, 'g'); p(6, 6, 'g'); p(7, 6, 'g'); p(9, 6, 'g'); }
+  if (L.extra === 'Cap') {
+    // The cap sits on the hair: nothing pokes out above it, and it is wide enough to cover an afro.
+    for (let y = 0; y < 2; y++) for (let x = 0; x < 14; x++) if (G[y][x] === 'h' || G[y][x] === 'H') G[y][x] = '.';
+    if (afro) { R(3, 10, 1, 1, 'o'); R(2, 11, 2, 3, 'o'); R(2, 11, 4, 4, 'd'); }
+    else { R(4, 9, 2, 2, 'o'); R(3, 10, 3, 3, 'o'); R(3, 10, 4, 4, 'd'); }
+  }
+  if (L.extra === 'Headphones') {
+    if (afro) { R(3, 10, 0, 0, 'a'); R(2, 2, 1, 4, 'a'); R(11, 11, 1, 4, 'a'); R(1, 2, 5, 6, 'A'); R(11, 12, 5, 6, 'A'); }
+    else {
+      // Band sits one row above the top of the hair (a bun pokes through), then runs down both sides to the cups.
+      const top = G.findIndex(r => r[4] === 'h' || r[4] === 'H'), y = Math.max(0, (top < 0 ? 4 : top) - 1);
+      R(4, 9, y, y, 'a'); R(3, 3, y + 1, 4, 'a'); R(10, 10, y + 1, 4, 'a'); R(2, 3, 5, 6, 'A'); R(10, 11, 5, 6, 'A');
+    }
+  }
+  return G.map(r => r.join(''));
+}
+const shade = (hx, k) => { const n = parseInt(hx.slice(1), 16), ch = v => Math.min(255, Math.round(v * k)).toString(16).padStart(2, '0'); return '#' + ch(n >> 16) + ch((n >> 8) & 255) + ch(n & 255); };
+function lookColours(look) {
+  const L = cleanLook(look);
+  return { h: L.hairColor, H: shade(L.hairColor, 1.35), s: L.skin, e: '#120d0b', o: L.outfitColor, d: shade(L.outfitColor, 0.7), w: '#f2f2f2', p: '#2a2f45', b: '#15151f', g: '#111111', a: '#222222', A: '#3a3a44' };
+}
+const CAPE = [[10, '..kklwllwl....'], [11, '..kslllllls...'], [12, '..kslllllls...'], [13, '..kkllllll....'], [14, '..kkllllll....']];
+const BIGCAPE = [[10, '.kkklwllwl....'], [11, '.kkslllllls...'], [12, '.kkslllllls...'], [13, '.kkkllllll....'], [14, '.kkkllllll....'], [15, '..kkss..ss....']];
+const BAND = [4, '..hhrrrrrrhh..'], CROWN = [[0, '....c.cc.c....'], [1, '....cccccc....']];
+const GEAR = [[], [BAND], [BAND, ...CAPE], [...CROWN, BAND, ...CAPE], [...CROWN, BAND, ...BIGCAPE]];
+// ===== GEAR BLOCK (v1.1.0) START: equippable gear and Master crowns. Self-contained: item art, rules, cleaning, drawing. =====
+// Needs from outside the block: RANKS, rankOf, S (player.xp, player.gear, player.gearSeen, player.exists, player.look, loaded, db, trial, stats),
+// buildSprite (the 14 x 20 body), GEAR (rank tier overlays, with CROWN/BAND/CAPE/BIGCAPE), esc, write, celebrate, sfx.flip, sfx.level,
+// and browser globals document (querySelectorAll) and console. Canvases are passed in by the caller.
+// Hooks outside this block: drawAvatar (calls avatarRows), renderHud (drawPet), creatorView/bindCreator (gearPicker, bindGearPicker),
+// saveLook (writes gear), render (checkGearUnlocks). Gear pixels use digit and symbol letters so they never clash with body letters.
+const GEAR_SLOTS = ['head', 'face', 'body', 'hands', 'back', 'pet'];
+const GEAR_SLOT_LABELS = { head: 'Head', face: 'Face', body: 'Body', hands: 'Hands', back: 'Back', pet: 'Pet' };
+const GEAR_COL = { 1: '#f2c14e', 2: '#fff1b8', 3: '#15151f', 4: '#e8f4ff', 5: '#d7263d', 6: '#8f1526', 0: '#f4f7ff', '@': '#9fb8ff', '*': '#ffd166', '^': '#ff7a1a' };
+// Rank gear. px = [row, 14-char string]; '.' leaves the pixel alone. Wings fill empty and cape pixels only (behind the body, over the cape).
+const GEAR_ITEMS = [
+  { id: 'champion-belt', name: 'Champion belt', slot: 'body', rank: 3, px: [[13, '......22......'], [14, '....112211....']] },
+  { id: 'victory-scarf', name: 'Victory scarf', slot: 'body', rank: 3, px: [[9, '....555555....'], [10, '.........56...'], [11, '.........6....']] },
+  { id: 'shades', name: 'Shades', slot: 'face', rank: 3, px: [[6, '....433343....']] },
+  { id: 'golden-gloves', name: 'Golden gloves', slot: 'hands', rank: 3, hands: true },
+  { id: 'flame-aura', name: 'Flame aura', slot: 'back', rank: 4, aura: true },
+  { id: 'wings', name: 'Wings', slot: 'back', rank: 4, behind: true, px: [[8, '.0..........0.'], [9, '00@........@00'], [10, '000@......@000'], [11, '@00@......@00@'], [12, '.@0........0@.'], [13, '..@........@..']] },
+  { id: 'pixel-pet', name: 'Pixel pet', slot: 'pet', rank: 4 },
+];
+// The pet: a 6 x 6 cat drawn on its own canvas beside the character (the 14 x 20 character art stays as it is).
+const PET = { rows: ['P....P', 'PP..PP', 'PPPPPP', 'PePPeP', 'PPnnPP', '.PPPP.'], col: { P: '#ff9f43', e: '#120d0b', n: '#ffd9b3' } };
+// Master crowns: 4 rows over the head (y 0-3), 8 wide with gems. Letters: 7 metal, 8 metal shade, 9 gem.
+// Bigger than the automatic Champion crown (2 rows, 6 wide, no gems) and it replaces it on the sprite.
+const CROWN_SHAPES = [
+  ['...7..77..7...', '...77.99.77...', '...77777777...', '...88988988...'],
+  ['.....7997.....', '...7.7777.7...', '...79777797...', '...88888888...'],
+  ['.....7777.....', '....797797....', '...77777777...', '...89888898...'],
+  ['..7..7..7..7..', '..77.7997.77..', '...77777777...', '...88899888...'],
+  ['......99......', '...7.7777.7...', '...77977977...', '...88888888...'],
+  ['.7..........7.', '..7..7997..7..', '...77777777...', '...89899898...'],
+];
+const CROWN_METALS = [['#f2c14e', '#b8862b'], ['#dfe6ee', '#9aa6b5'], ['#f0a58a', '#b8664f'], ['#a8f0e0', '#5fb8a5']];
+// Preset crowns: two learners who master the same subject get the same crown, whatever their stat ids.
+// Add one like this: { id: 'kebab-id', name: 'Shown name', match: { ids: ['stat-id', ...], name: /stat name regex/i },
+//   rows: [4 strings of 14 chars, letters 7 metal, 8 shade, 9 gem], col: { 7: '#hex', 8: '#hex', 9: '#hex' } }
+// A stat can also name its preset directly with the optional field `crown: '<preset id>'`.
+const PRESET_CROWNS = [
+  { id: 'ai-agents', name: 'AI Agents crown', match: { ids: ['agents', 'agentic-os', 'ai-agents'], name: /\bagent/i },
+    rows: ['...9..99..9...', '...7..77..7...', '...77799777...', '...89888898...'], col: { 7: '#cfd8e6', 8: '#7d8aa3', 9: '#39e6ff' } },
+];
+const gearHash = s => { let h = 2166136261; for (const ch of String(s)) { h ^= ch.codePointAt(0); h = Math.imul(h, 16777619) >>> 0; } return h >>> 0; };
+const hslHex = (h, s, l) => { s /= 100; l /= 100; const k = n => (n + h / 30) % 12, a = s * Math.min(l, 1 - l), f = n => Math.round(255 * (l - a * Math.max(-1, Math.min(k(n) - 3, 9 - k(n), 1)))).toString(16).padStart(2, '0'); return '#' + f(0) + f(8) + f(4); };
+// Resolution order: stat.crown (a preset id), then a preset match (id list or name regex), then a crown derived from the stat id.
+// stat.crown === 'own' opts out of presets: that stat always gets its own derived crown.
+function crownForStat(st) {
+  const sid = String(st?.id ?? ''), nm = String(st?.name ?? '');
+  const p = st?.crown === 'own' ? null : PRESET_CROWNS.find(x => x.id === st?.crown) || PRESET_CROWNS.find(x => x.match.ids.includes(sid) || x.match.name.test(nm));
+  if (p) return { id: 'crown:' + p.id, name: p.name, rows: p.rows, col: p.col };
+  const h = gearHash(sid), m = CROWN_METALS[(h >>> 16) % CROWN_METALS.length];
+  return { id: 'crown:stat:' + sid, name: (nm || sid) + ' crown', rows: CROWN_SHAPES[h % CROWN_SHAPES.length], col: { 7: m[0], 8: m[1], 9: hslHex((h >>> 8) % 360, 85, 60) } };
+}
+// Every item with unlocked + req for the current player. Crowns: one per distinct crown, listed once a matching stat is at 5+ (teaser).
+function gearCatalog(xp = S.player.xp || 0, stats = S.stats) {
+  const r = rankOf(xp).idx, out = GEAR_ITEMS.map(it => ({ ...it, unlocked: r >= it.rank, req: 'Reach ' + RANKS[it.rank][1] }));
+  const crowns = new Map();
+  for (const st of stats || []) {
+    const m = Number(st?.mastery) || 0; if (m < 5) continue;
+    const c = crownForStat(st), was = crowns.get(c.id);
+    if (!was || m > was.m) crowns.set(c.id, { ...c, slot: 'head', m, unlocked: m >= 7 || !!was?.unlocked, req: 'Master ' + String(st.name || st.id) });
+    else if (m >= 7) was.unlocked = true;
+  }
+  return [...crowns.values(), ...out];
+}
+// Never trust stored ids: keep an id only if it's a real item, in that slot, and unlocked now. Like cleanLook.
+function cleanGear(g, cat = gearCatalog()) {
+  const o = {};
+  for (const slot of GEAR_SLOTS) { const id = g?.[slot], it = typeof id === 'string' && cat.find(x => x.id === id); o[slot] = it && it.slot === slot && it.unlocked ? id : null; }
+  return o;
+}
+const gearSeenList = () => Array.isArray(S.player.gearSeen) ? S.player.gearSeen.filter(x => typeof x === 'string') : [];
+// Draws equipped gear into the sprite rows. base = the body before rank gear (for finding hands). Back items go behind, the rest on top.
+function paintGear(rows, eq, base, cat = gearCatalog()) {
+  const it = id => id && cat.find(x => x.id === id);
+  const put = (px, behind) => { for (const [y, row] of px) [...row].forEach((ch, x) => { if (ch !== '.' && (!behind || rows[y][x] === '.' || rows[y][x] === 'k')) rows[y][x] = ch; }); };
+  const back = it(eq.back);
+  if (back?.px) put(back.px, true);
+  for (const slot of ['body', 'face']) { const i = it(eq[slot]); if (i?.px) put(i.px); }
+  if (it(eq.hands)?.hands) for (const x of [3, 10]) { let y = -1; for (let yy = 10; yy <= 15; yy++) if (base[yy][x] !== '.') y = yy; if (y >= 0) rows[y][x] = '1'; }
+  const crown = it(eq.head);
+  // A Master crown sits on the hair: nothing pokes out above it (like the Cap).
+  if (crown?.rows) { for (let y = 0; y < 3; y++) for (let x = 0; x < 14; x++) if (rows[y][x] === 'h' || rows[y][x] === 'H') rows[y][x] = '.'; put(crown.rows.map((r, y) => [y, r])); }
+  if (back?.aura) {
+    const solid = (x, y) => y >= 0 && y < rows.length && x >= 0 && x < 14 && rows[y][x] !== '.' && rows[y][x] !== '*' && rows[y][x] !== '^';
+    const edge = [];
+    rows.forEach((row, y) => row.forEach((ch, x) => { if (ch === '.' && (solid(x - 1, y) || solid(x + 1, y) || solid(x, y - 1) || solid(x, y + 1))) edge.push([x, y]); }));
+    for (const [x, y] of edge) rows[y][x] = y < 8 ? '*' : '^';
+  }
+  return rows;
+}
+// The full sprite as rows of letters: body, rank gear (an equipped Master crown replaces the rank crown), then equipped gear.
+function avatarRows(rank, look, gear) {
+  const cat = gearCatalog(), eq = cleanGear(gear, cat), base = buildSprite(look), rows = base.map(r => [...r]);
+  for (const [y, row] of GEAR[rank.idx] || []) [...row].forEach((ch, x) => {
+    if (ch === 'k') { if (rows[y][x] === '.') rows[y][x] = 'k'; }
+    else if (ch === 'r' || (ch === 'c' && !eq.head)) rows[y][x] = ch;
+  });
+  paintGear(rows, eq, base, cat);
+  const crown = eq.head && cat.find(x => x.id === eq.head);
+  return { rows, col: { ...GEAR_COL, ...(crown ? crown.col : {}) } };
+}
+function drawPet(c, gear = S.player.gear) {
+  if (!c) return;
+  const on = !!cleanGear(gear).pet, ctx = c.getContext('2d');
+  c.hidden = !on; ctx.clearRect(0, 0, c.width, c.height); if (!on) return;
+  PET.rows.forEach((row, y) => [...row].forEach((ch, x) => { if (PET.col[ch]) { ctx.fillStyle = PET.col[ch]; ctx.fillRect(x, y, 1, 1); } }));
+}
+// Gear section of the creator. Unlocked items toggle on and off; locked ones show a lock and what unlocks them.
+function gearPicker(M) {
+  const cat = gearCatalog(), eq = cleanGear(M.gear, cat);
+  const btn = it => it.unlocked
+    ? `<button type="button" class="gear-it${eq[it.slot] === it.id ? ' on' : ''}" data-equip="${esc(it.id)}" aria-pressed="${eq[it.slot] === it.id}"><b>${esc(it.name)}</b><small>${eq[it.slot] === it.id ? 'Wearing' : 'Tap to wear'}</small></button>`
+    : `<button type="button" class="gear-it locked" disabled aria-disabled="true"><b>🔒 ${esc(it.name)}</b><small>${esc(it.req)}${it.slot === 'head' ? ` (level ${esc(it.m)} of 7)` : ''}</small></button>`;
+  const rows = GEAR_SLOTS.map(slot => {
+    const items = cat.filter(it => it.slot === slot);
+    const body = items.length ? items.map(btn).join('') : slot === 'head' ? '<p class="hint">Master crowns: pass level 7 in a skill and you earn that skill\'s own crown. It shows here once a skill reaches level 5.</p>' : '';
+    return `<div class="gear-slot"><span class="label">${esc(GEAR_SLOT_LABELS[slot])}</span><div class="gear-grid">${body}</div></div>`;
+  }).join('');
+  return `<div class="cr-row gear"><span class="label">Gear (Champion rank and up, Master crowns per skill)</span><p class="hint">One item per slot. Tap again to take it off.</p>${rows}</div>`;
+}
+function bindGearPicker(M, rerender) {
+  const cat = gearCatalog();
+  document.querySelectorAll('[data-equip]').forEach(b => b.onclick = () => {
+    const it = cat.find(x => x.id === b.dataset.equip); if (!it || !it.unlocked) return;
+    M.gear = cleanGear(M.gear, cat); M.gear[it.slot] = M.gear[it.slot] === it.id ? null : it.id; sfx.flip(); rerender();
+    const again = [...document.querySelectorAll('[data-equip]')].find(x => x.dataset.equip === it.id); if (again) again.focus();
+  });
+}
+// Celebrate newly unlocked gear once. What's been announced is kept in player/me.gearSeen.
+function checkGearUnlocks() {
+  if (!S.loaded || !S.db || !S.player.exists || !S.player.look || S.trial?.phase === 'run') return;
+  const seen = gearSeenList(), fresh = gearCatalog().filter(it => it.unlocked && !seen.includes(it.id));
+  if (!fresh.length) return;
+  S.player.gearSeen = [...seen, ...fresh.map(it => it.id)];
+  write('player/me', { gearSeen: S.player.gearSeen }).catch(e => console.error(e));
+  const names = fresh.map(it => it.name);
+  celebrate({ kicker: 'Gear', title: 'New gear unlocked: ' + names[0] + (names.length > 1 ? ` and ${names.length - 1} more` : ''),
+    sub: (names.length > 1 ? names.join(', ') + '. ' : '') + 'Wear it from the ⚙ button.', tier: fresh.some(it => it.slot === 'head') ? 'diamond' : 'plat', sound: sfx.level, confetti: true });
+}
+// ===== GEAR BLOCK END =====
+function drawAvatar(rank, c = $('#avatar'), look = S.player.look, gear = S.player.gear) {
+  if (!c) return;
+  const ctx = c.getContext('2d');
+  const tier = getComputedStyle(document.documentElement).getPropertyValue('--' + rank.tier).trim() || getComputedStyle($('#hud')).getPropertyValue('--tier').trim() || '#c8793a';
+  // Rank gear (headband and crown on top, the cape behind the body) and equipped gear come from avatarRows in the gear block.
+  const av = avatarRows(rank, look, gear), rows = av.rows;
+  const col = { ...lookColours(look), c: '#f2c14e', r: tier, k: tier, ...av.col };
+  ctx.clearRect(0, 0, c.width, c.height);
+  rows.forEach((row, y) => row.forEach((ch, x) => { if (col[ch]) { ctx.fillStyle = col[ch]; ctx.fillRect(x, y, 1, 1); } }));
+}
+
+// Streak fire under the character. Taller with a longer streak.
+const FIRE_TIERS = [[1, 'Spark', 7], [3, 'Flame', 4.5], [7, 'Blaze', 3], [14, 'Inferno', 2], [30, 'Supernova', 1.3]];
+const fireTier = s => FIRE_TIERS.reduce((t, f) => s >= f[0] ? f : t, null);
+const fire = { heat: [], timer: null, decay: 0, super: false };
+function startFire(streak) {
+  const c = $('#flame'); if (!c) return;
+  const t = fireTier(streak), ctx = c.getContext('2d'), W = c.width, H = c.height;
+  clearInterval(fire.timer); fire.timer = null;
+  if (!t) { ctx.clearRect(0, 0, W, H); return; }
+  fire.decay = t[2]; fire.super = t[0] >= 30;
+  fire.heat = Array.from({ length: H }, () => new Array(W).fill(0));
+  const pal = ['', '#7a1200', '#c8102e', '#ff5a1f', '#ff9a2e', '#ffd166', fire.super ? '#5fe3d0' : '#fff1b8'];
+  const frame = () => {
+    const h = fire.heat;
+    for (let x = 2; x < W - 2; x++) h[H - 1][x] = 36;
+    for (let y = 0; y < H - 1; y++) for (let x = 0; x < W; x++) {
+      const src = h[y + 1][x], dx = Math.min(W - 1, Math.max(0, x + ((Math.random() * 3) | 0) - 1));
+      h[y][dx] = Math.max(0, src - Math.random() * fire.decay);
+    }
+    ctx.clearRect(0, 0, W, H);
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) { const v = Math.min(6, (h[y][x] / 6) | 0); if (v) { ctx.fillStyle = pal[v]; ctx.fillRect(x, y, 1, 1); } }
+  };
+  for (let i = 0; i < 30; i++) frame();
+  if (!reduced()) fire.timer = setInterval(frame, 110);
+}
+
+// ---------- Quest Board: NPCs offer training for your role (role gaps) ----------
+const NPCS = {
+  mentor: { name: 'The Mentor', role: 'Mentor', col: { h: '#4a2e1c', H: '#8d99b8', s: '#c68a5e', e: '#1a1a2e', m: '#7a3b2e', j: '#2e7d6b', w: '#f3f3f3', t: '#f2c14e', p: '#2f3442', b: '#1d1d24' },
+    rows: ['..............', '.....hhhh.....', '...hhhhhhhh...', '...hHhhhhhh...', '...hssssssh...', '....sesses....', '....ssssss....', '....ssmmss....', '.....ssss.....', '....jjwwjj....', '...jjjwwjjj...', '..sjjjwtjjjs..', '..sjjjwwjjjs..', '...jjjjjjjj...', '...jjjjjjjj...', '....pp..pp....', '....pp..pp....', '....bb..bb....', '...bbb..bbb...', '..............'],
+    lines: { hello: "Good to meet you. Quest 1 is short. Let's get you a quick win.", back: ['Welcome back. Pick up where you left off.', "Good to see you. Let's keep it moving."], step: ["One step at a time. You've got this.", 'Read the mission twice, then go.'], pass: ["That's it. Exactly right.", 'Clean. On to the next.'], fail: ['Not yet. Check what the mission asks for.', 'Close. Read it again and try once more.'], quiz: 'Three questions, two to pass. Trust what you just did.', boss: "Boss fight. Everything so far, all at once. You're ready.", done: "Topic done. That's real progress.", accept: "Good call. Let's start." } },
+  professor: { name: 'The Professor', role: 'Theory', col: { h: '#c9ccd1', s: '#d9a27a', g: '#2a2a2a', e: '#6fb7ff', w: '#f3f3f3', k: '#7a0a1c', j: '#7a5230', p: '#3a3a44', b: '#1d1d24' },
+    rows: ['..............', '..............', '.....ssss.....', '....ssssss....', '...hssssssh...', '...hgegegeh...', '....ssssss....', '....shhhhs....', '.....hhhh.....', '....wwkkww....', '...jjwkkwjj...', '..sjjjwwjjjs..', '..sjjjjjjjjs..', '...jjjjjjjj...', '...jjjjjjjj...', '....pp..pp....', '....pp..pp....', '....bb..bb....', '...bbb..bbb...', '..............'] },
+};
+// A topic's guide: a built-in NPC (guide.npc) or its own 14 x 20 sprite. Offers the topic, then travels with you through it.
+const FALLBACK_LINES = { hello: 'Ready when you are. Quest 1 is short.', back: ['Good to see you back.'], step: ['One step at a time.'], pass: ['Nice. On to the next.'], fail: ['Close. Read the mission again.'], quiz: 'Three questions. Two to pass.', boss: 'Boss fight. Everything you learned, all at once.', done: 'Topic done. Proper work.', combo: 'First time, every time. Keep it rolling.', accept: 'Good. Let\'s start.' };
+function guideOf(t) {
+  const g = t?.guide; if (!g) return null;
+  const base = NPCS[g.npc] || {};
+  return { ...base, ...g, col: g.col || base.col, rows: g.rows || base.rows, lines: { ...FALLBACK_LINES, ...(base.lines || {}), ...(g.lines || {}) } };
+}
+const pickLine = (x, n) => Array.isArray(x) ? x[Math.abs(n | 0) % x.length] : x;
+function paintSprite(c, who) {
+  if (!c || !who?.rows) return;
+  const ctx = c.getContext('2d'); ctx.clearRect(0, 0, c.width, c.height);
+  who.rows.forEach((row, y) => [...row].forEach((ch, x) => { if (who.col[ch]) { ctx.fillStyle = who.col[ch]; ctx.fillRect(x, y, 1, 1); } }));
+}
+function spriteUrl(who) { const c = document.createElement('canvas'); c.width = 14; c.height = 20; paintSprite(c, who); return c.toDataURL(); }
+const guideCanvas = (t, cls = 'g-sprite') => `<canvas class="${cls}" width="14" height="20" data-guide="${esc(t.id)}" aria-hidden="true"></canvas>`;
+function guideBar(t, line, mood) {
+  const g = guideOf(t); if (!g || !line) return '';
+  return `<div class="guide-bar ${mood || ''}"><div class="npc">${guideCanvas(t)}<b>${esc(g.name)}</b></div><p class="speech say" role="status">${esc(line)}</p></div>`;
+}
+function paintGuides() {
+  document.querySelectorAll('canvas[data-guide]').forEach(c => paintSprite(c, guideOf(S.topics.find(t => t.id === c.dataset.guide))));
+  const r = rankOf(S.player.xp || 0); document.querySelectorAll('canvas.me-mini').forEach(c => drawAvatar(r, c));
+}
+
+// A role gap's priority (high / medium / low) as a chip: "High priority for your role".
+const priorityChip = p => p ? `${String(p).charAt(0).toUpperCase()}${String(p).slice(1).toLowerCase()} priority for your role` : '';
+const liveOffers = () => S.offers.filter(o => o.status === 'offered' || (o.status === 'snoozed' && (o.snoozeUntil || '') <= today()))
+  .sort((a, b) => (a.rank || 99) - (b.rank || 99));
+// Board = topics built and waiting for a yes (ready now), then role gap offers (built by /learn after a yes).
+function boardItems() {
+  const ready = S.topics.filter(t => t.status === 'offered' && guideOf(t) && (t.snoozeUntil || '') <= today()).map(t => {
+    const g = guideOf(t), o = g.offer || {}, qs = t.quests || [];
+    return { kind: 'topic', id: t.id, topic: t, who: g, title: o.title || t.title, pitch: o.pitch || t.mission?.why || '', reward: o.reward || [],
+      chips: ['Ready now', `${qs.length} quests`, o.effort || `About ${qs[0]?.minutes || 15} min each`], ceiling: o.ceiling, note: o.note };
+  });
+  const gaps = liveOffers().map(o => ({ kind: 'gap', id: o.id, offer: o, who: NPCS[o.npc] || NPCS.mentor, title: o.title, pitch: o.pitch, reward: o.reward || [],
+    chips: [priorityChip(o.priority), o.effort], ceiling: o.ceiling, note: o.note }));
+  return [...ready, ...gaps];
+}
+function questBoard() {
+  const items = boardItems(), accepted = S.offers.filter(o => o.status === 'accepted');
+  const req = requestCard();
+  const waiting = accepted.length ? `<div class="request"><span class="label">Accepted, being built</span>
+    <p class="why">These aren't playable yet. Open <code>/learn</code> in Claude and ${accepted.length > 1 ? 'they show' : 'it shows'} up in your Quest Log.</p>
+    ${accepted.map(a => `<div class="req-row" style="align-items:center"><b style="flex:1">${esc(a.skill)}</b><button class="ghost" data-undo="${esc(a.id)}">Undo</button></div>`).join('')}</div>` : '';
+  const intro = `<p class="hint">Each guide offers training for your role. Accept a quest, or ask for your own below.</p>`;
+  if (!items.length) return `<section class="sec"><h2>Quest Board</h2>${intro}${waiting}${req}</section>`;
+  const i = Math.min(S.board.idx, items.length - 1), o = items[i], npc = o.who;
+  return `<section class="sec"><h2>Quest Board</h2>${intro}
+    <div class="board">
+      <div class="npc"><canvas id="npc" width="14" height="20" aria-label="${esc(npc.name)}"></canvas><b>${esc(npc.name)}</b><span class="label">${esc(npc.role || '')}</span></div>
+      <div class="speech">
+        <div class="chips">${o.chips.filter(Boolean).map((c, n) => `<span class="chip ${n ? 'cold' : 'num'}">${esc(c)}</span>`).join('')}</div>
+        <h3>${esc(o.title)}</h3>
+        <p class="say" id="npc-say" data-full="${esc(o.pitch)}">${S.board.typed === o.id ? esc(o.pitch) : ''}</p>
+        <div class="reward"><span class="label">Reward</span><ul>${o.reward.map(r => `<li>${esc(r)}</li>`).join('')}</ul>
+          ${o.ceiling || o.note ? `<p class="why">${o.ceiling ? `Mastery ceiling: <b>${esc(o.ceiling)}</b>` : ''}${o.ceiling && o.note ? ' · ' : ''}${o.note ? esc(o.note) : ''}</p>` : ''}</div>
+        ${S.board.confirm === o.id ? `<div class="confirm" role="alertdialog" aria-label="Confirm accept"><b>Accept "${esc(o.title)}"?</b>
+          <p class="why">${o.kind === 'topic' ? (questLine().length ? 'It starts now as a side quest next to your main quest. You can give it back before you start it.' : 'It starts now as your main quest.') : 'Claude builds it next time you run /learn. Then it shows in your Quest Log. You can undo until then.'}</p>
+          <div class="acts"><button class="go" id="b-yes">Yes, accept</button><button id="b-no">Cancel</button></div></div>` : ''}
+        <div class="acts" ${S.board.confirm === o.id ? 'hidden' : ''}><button class="go" id="b-accept">${o.kind === 'topic' ? 'Accept and start' : 'Accept quest'}</button><button id="b-snooze">Not now</button>
+          ${items.length > 1 ? `<span class="pager"><button class="ghost icon" id="b-prev" aria-label="Previous offer">‹</button><span class="num">${i + 1}/${items.length}</span><button class="ghost icon" id="b-nextoffer" aria-label="Next offer">›</button></span>` : ''}</div>
+      </div>
+    </div>${waiting}${req}</section>`;
+}
+// Ask for your own training: a YouTube link, a course, a skill, or a file (a saved TikTok, a PDF, screenshots). Queued for the next /learn.
+// Files go to this page's private asset store; the request row keeps their ids so /learn can download them.
+const REQ_TYPES = { mp4: 'video/mp4', mov: 'video/quicktime', m4v: 'video/mp4', webm: 'video/webm', pdf: 'application/pdf', png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', webp: 'image/webp', gif: 'image/gif', txt: 'text/plain', md: 'text/markdown', csv: 'text/csv', json: 'application/json' };
+const REQ_MAX = 20 * 1024 * 1024, REQ_BIG = 300 * 1024 * 1024, PART = 14 * 1024 * 1024;
+// Over 20 MB (or a type the store won't take, like .mov): upload as base64 text parts. /learn joins them with join_parts.py.
+const needsSplit = f => f.size > REQ_MAX || REQ_TYPES[extOf(f.name)] === 'video/quicktime';
+async function toBase64(blob) {
+  const u = new Uint8Array(await blob.arrayBuffer()); let bin = '';
+  for (let i = 0; i < u.length; i += 0x8000) bin += String.fromCharCode.apply(null, u.subarray(i, i + 0x8000));
+  return btoa(bin);
+}
+async function uploadFile(f, say) {
+  const type = REQ_TYPES[extOf(f.name)];
+  if (!needsSplit(f)) { const a = await S.assets.upload(f, { type }); return { id: a.id, name: f.name, type: a.contentType, size: a.sizeBytes }; }
+  const parts = [], n = Math.ceil(f.size / PART);
+  for (let i = 0; i < n; i++) {
+    say(`Uploading ${f.name}: part ${i + 1} of ${n}…`);
+    const text = await toBase64(f.slice(i * PART, (i + 1) * PART));
+    parts.push((await S.assets.upload(new Blob([text], { type: 'text/plain' }), { type: 'text/plain' })).id);
+  }
+  return { name: f.name, type, size: f.size, parts, enc: 'base64' };
+}
+const extOf = n => (n.split('.').pop() || '').toLowerCase();
+const mb = b => (b / 1048576).toFixed(b < 1048576 ? 2 : 1) + ' MB';
+function requestCard() {
+  const queued = S.requests.filter(r => r.status === 'queued'), building = S.requests.filter(r => r.status === 'building'), files = S.reqFiles || [];
+  const label = r => { const t = r.text || (r.files || []).map(f => f.name).join(', ') || 'Request'; return t.length > 60 ? t.slice(0, 57) + '…' : t; };
+  const into = r => { const t = S.topics.find(x => x.id === r.addTo); return t ? ` → ${esc(t.title)}` : ''; };
+  return `<form class="request" id="req-form"><label class="label" for="req">Request training</label>
+    <p class="why">Paste a YouTube link or course, type what you want to learn (e.g. "Spanish for a trip"), or add a file like a saved TikTok, a PDF or screenshots. It comes back as a quest on this board.</p>
+    <div class="req-row"><input id="req" class="editor" autocomplete="off" placeholder="https://youtube.com/... or a skill" value="${esc(S.reqDraft || '')}"><button class="go" type="submit">Send</button></div>
+    <div class="req-to"><label for="req-to">Add to</label><select id="req-to">
+      <option value="auto">Claude decides</option><option value="new"${S.reqTo === 'new' ? ' selected' : ''}>A new topic</option>
+      ${S.topics.filter(t => t.status !== 'offered').map(t => `<option value="${esc(t.id)}"${S.reqTo === t.id ? ' selected' : ''}>${esc(t.title)}</option>`).join('')}
+    </select></div>
+    ${S.assets ? `<div class="req-files">
+      <input type="file" id="req-file" multiple hidden accept="${Object.keys(REQ_TYPES).map(e => '.' + e).join(',')}">
+      <button type="button" class="ghost" id="req-add">+ Add file</button>
+      ${files.map((f, n) => `<span class="file"><span title="${esc(f.name)}">${esc(f.name)}</span><button type="button" class="ghost icon" data-unfile="${n}" aria-label="Remove ${esc(f.name)}">×</button></span>`).join('')}
+    </div>
+    <p class="why">Video (mp4, mov, webm), PDF, images or text. Up to 300 MB; big files upload in parts, so keep the page open till it says Sent. Stays private on this page.</p>` : ''}
+    ${queued.length ? `<p class="why">Queued: ${queued.map(r => `<b>${esc(label(r))}</b>${into(r)}${(r.files || []).length ? ` (${r.files.length} file${r.files.length > 1 ? 's' : ''})` : ''}`).join(', ')}. Open /learn in Claude to build it.</p>` : ''}
+    ${building.length ? `<p class="why">Building now: ${building.map(r => `<b>${esc(label(r))}</b>${into(r)}`).join(', ')}. Usually 20-40 min.</p>` : ''}</form>`;
+}
+function drawNpc() {
+  const items = boardItems(), o = items[Math.min(S.board.idx, items.length - 1)];
+  const c = $('#npc'); if (!c || !o) return;
+  paintSprite(c, o.who);
+  const say = $('#npc-say'); if (!say || S.board.typed === o.id) return;
+  const full = say.dataset.full; S.board.typed = o.id;
+  if (reduced()) { say.textContent = full; return; }
+  let n = 0; clearInterval(S.board.timer);
+  S.board.timer = setInterval(() => { n += 2; say.textContent = full.slice(0, n); if (n >= full.length) clearInterval(S.board.timer); }, 18);
+  say.onclick = () => { clearInterval(S.board.timer); say.textContent = full; };
+}
+function bindBoard() {
+  const items = boardItems(), o = items[Math.min(S.board.idx, items.length - 1)], on = (id, fn) => { const b = $('#' + id); if (b) b.onclick = fn; };
+  const form = $('#req-form'), inp = $('#req');
+  if (inp) inp.oninput = () => { S.reqDraft = inp.value; };
+  const to = $('#req-to'); if (to) to.onchange = () => { S.reqTo = to.value; };
+  const pick = $('#req-file');
+  on('req-add', () => pick && pick.click());
+  if (pick) pick.onchange = () => {
+    const ok = [], bad = [];
+    [...pick.files].forEach(f => (!REQ_TYPES[extOf(f.name)] ? bad.push(`${f.name}: that file type can't be stored. Try mp4, PDF or an image.`)
+      : f.size > REQ_BIG ? bad.push(`${f.name} is ${mb(f.size)}. Max is 300 MB.`) : ok.push(f)));
+    S.reqFiles = [...(S.reqFiles || []), ...ok]; pick.value = '';
+    if (bad.length) toast(bad[0]);
+    render();
+  };
+  document.querySelectorAll('[data-unfile]').forEach(b => b.onclick = () => { S.reqFiles.splice(+b.dataset.unfile, 1); render(); });
+  if (form) form.onsubmit = e => {
+    e.preventDefault();
+    const text = (inp.value || '').trim(), files = S.reqFiles || [];
+    if (text.length < 3 && !files.length) { toast('Paste a link, type a skill or add a file first.'); return; }
+    const url = (text.match(/https?:\/\/\S+/) || [null])[0];
+    guarded(async () => {
+      const stored = [];
+      for (const [n, f] of files.entries()) {
+        if (files.length > 1 || f.size > 2 * 1048576) toast(`Uploading ${f.name} (${n + 1}/${files.length})…`);
+        try {
+          stored.push(await uploadFile(f, toast));
+        } catch (err) {
+          console.error(err);
+          const why = { too_large: 'a part was too big', unsupported_type: 'that type can\'t be stored', quota_or_state: 'the page\'s storage is full', rate_limited: 'too many uploads at once. Wait a minute' }[err?.code] || 'the upload failed. Try again';
+          toast(`Couldn't add ${f.name}: ${why}.`); return;
+        }
+      }
+      await write('requests/r' + Date.now(), { text, url, files: stored, addTo: S.reqTo || 'auto', status: 'queued', askedOn: today() }, true);
+      S.reqDraft = ''; S.reqFiles = []; S.reqTo = 'auto'; sfx.pass(); toast('Sent. Open /learn in Claude and it gets built.'); render();
+    });
+  };
+  // Undo an accepted role gap offer before /learn builds it: back on the board.
+  document.querySelectorAll('[data-undo]').forEach(b => b.onclick = () => guarded(async () => {
+    const off = S.offers.find(x => x.id === b.dataset.undo); if (!off) return;
+    await write('offers/' + off.id, { status: 'offered', decidedOn: null }); off.status = 'offered'; delete off.decidedOn;
+    sfx.flip(); toast(`${off.skill} is back on the Quest Board.`); render();
+  }));
+  drawNpc(); if (!o) return;
+  const flip = d => { S.board.idx = (S.board.idx + d + items.length) % items.length; S.board.typed = null; S.board.confirm = null; sfx.flip(); render(); };
+  on('b-prev', () => flip(-1)); on('b-nextoffer', () => flip(1));
+  on('b-accept', () => { S.board.confirm = o.id; sfx.flip(); render(); const y = $('#b-yes'); if (y) y.focus(); });
+  on('b-no', () => { S.board.confirm = null; render(); });
+  on('b-yes', () => guarded(async () => {
+    S.board.idx = 0; S.board.typed = null; S.board.confirm = null;
+    const art = `<img class="pix-npc" src="${spriteUrl(o.who)}" alt="">`;
+    if (o.kind === 'topic') {
+      const t = o.topic, hasMain = S.topics.some(x => x.id === S.player.activeTopic && isActive(x) && x !== t);
+      await write('topics/' + t.id, { status: 'active', acceptedOn: today() }); t.status = 'active';
+      if (!hasMain) { await write('player/me', { activeTopic: t.id }, !S.player.exists); S.player.activeTopic = t.id; S.player.exists = true; }
+      celebrate({ kicker: hasMain ? 'Side quest accepted' : 'Quest accepted', title: o.title, art,
+        sub: `${o.who.name}: "${o.who.lines.accept}"${hasMain ? ' It sits next to your main quest in the Quest Log. Switch any time.' : ''}`,
+        tier: 'gold', sound: sfx.level, confetti: true, ok: 'Start quest 1', then: () => go({ name: 'topic', topic: t.id }) });
+      render(); return;
+    }
+    await write('offers/' + o.id, { status: 'accepted', decidedOn: today() }); o.offer.status = 'accepted';
+    celebrate({ kicker: 'Quest accepted', title: o.title, art, sub: `${o.who.name}: "Good. Open /learn in Claude and it'll be ready for you."`, tier: 'gold', sound: sfx.pass, ok: 'Let\'s go' });
+    render();
+  }));
+  on('b-snooze', () => guarded(async () => {
+    S.board.typed = null;
+    if (o.kind === 'topic') {
+      await write('topics/' + o.id, { snoozeUntil: addDays(7) }); o.topic.snoozeUntil = addDays(7);
+      toast(`${o.who.name}: "No rush. I'll check back next week."`); render(); return;
+    }
+    await write('offers/' + o.id, { status: 'snoozed', snoozeUntil: addDays(14), decidedOn: today() }); o.offer.status = 'snoozed'; o.offer.snoozeUntil = addDays(14);
+    toast('Fine. I\'ll ask again in two weeks.'); render();
+  }));
+}
+
+// ---------- Rank Trials: the only way to raise mastery ----------
+const trialDoc = () => S.trials.find(x => x.stat === S.trial?.stat && x.level === S.trial?.level);
+const fmtClock = sec => `${Math.floor(sec / 60)}:${String(Math.max(0, sec % 60)).padStart(2, '0')}`;
+// Placement runs the real trial with fewer problems (placementPick, pass mark placementPass) and a shorter clock to match.
+const isPlacement = (T, d) => !!(T?.placement && d?.placementPick);
+const trialPick = (T, d) => isPlacement(T, d) ? Math.min(d.placementPick, d.problems.length) : d.pick;
+const trialPass = (T, d) => isPlacement(T, d) ? (d.placementPass || d.passMark) : d.passMark;
+const trialMinutes = (T, d) => isPlacement(T, d) ? Math.max(5, Math.ceil(d.minutes * d.placementPick / (d.pick || d.placementPick))) : d.minutes;
+// Role topics: placement starts at the self-rated level (placementStart) or the next unproven level, whichever is higher.
+const placeLevel = t => Math.max((S.stats.find(x => x.id === t.stat)?.mastery || 0) + 1, Number(t.placementStart) || 1);
+async function markPlacementDone(topicId) {
+  const tp = S.topics.find(x => x.id === topicId); if (!tp || tp.placementDone) return;
+  await write('topics/' + tp.id, { placementDone: today() }); tp.placementDone = today();
+}
+function trialView() {
+  const T = S.trial, d = trialDoc(), st = S.stats.find(x => x.id === T?.stat), lad = st?.ladder?.[(T?.level || 1) - 1];
+  if (!T || !d || !st) return `<button class="back ghost" id="b-home">← Skill Tree</button><div class="empty"><b>Trial not found.</b></div>`;
+  const head = `<div><span class="label">Rank Trial · ${esc(st.name)}</span><h1 style="font-size:1.6rem">${esc(lad?.name || 'Level ' + T.level)} (${T.level}/7)</h1></div>`;
+  if (T.phase === 'intro') return `<button class="back ghost" id="b-home">← Skill Tree</button>${head}
+    ${T.placement ? `<p class="hint"><b>Placement.</b> Pass to skip quests you already know, then try the next level. Stop when you miss. Mastery counts the same as any Rank Trial.</p>` : ''}
+    ${trialDataHtml(T, d, st)}
+    <div class="card"><p><b>Prove it:</b> ${esc(lad?.can || '')}</p><p class="why">${esc(lad?.benchmark || '')}</p>
+      <ul class="prose" style="margin:0;padding-left:20px"><li>${trialPick(T, d)} problems, picked at random from ${d.problems.length}. New ones, not from your quests.</li><li>No hints, no show answer, no help from Claude.</li><li>${trialMinutes(T, d)} minutes. When time runs out, unanswered problems count as wrong.</li><li>Pass mark: <b>${trialPass(T, d)} of ${trialPick(T, d)}</b>. Fail and this trial locks for ${TRIAL_WAIT} days. Use them to practise.</li><li>Leaving mid-trial counts as a fail.</li></ul>
+      <div class="acts"><button class="go" id="b-tstart">Start the trial</button></div></div>`;
+  if (T.phase === 'done') {
+    const pass = T.score >= trialPass(T, d), tp = T.placement && S.topics.find(x => x.id === T.placement);
+    const climb = pass && T.placement && S.trials.some(x => x.stat === T.stat && x.level === T.level + 1) && ((tp?.placement || {})[T.level + 1] || tp?.fromRole);
+    return `<button class="back ghost" id="b-home">← Skill Tree</button>${head}
+      <div class="card"><p class="result ${pass ? 'pass' : 'fail'}">${T.score} of ${T.picks.length}. ${pass ? `Passed. You're rated ${esc(lad?.name || '')}.` : T.placement ? `Pass mark is ${trialPass(T, d)}. That's your starting point: your quests begin here.` : `Not this time. Pass mark is ${d.passMark}. Retry tomorrow.`}</p>
+        <div class="tres">${T.picks.map((p, i) => `<div><b class="${T.results[i] ? 'ok' : 'no'}">${T.results[i] ? '✓' : '✗'}</b><span>${prose(p.goal || p.q).replace(/^<p>|<\/p>$/g, '')}</span></div>`).join('')}</div>
+        ${pass ? '' : '<p class="why">Answers stay hidden so the trial stays fair. Review the quests for the ones you missed.</p>'}
+        ${pass && T.placement ? `<p class="why">Placed out of the quests this level covers. They stay replayable.</p>` : ''}
+        <div class="acts">${climb
+          ? `<button class="go" id="b-tnext">Try the next level</button><button id="b-tstop">Start my quests here</button>` : T.placement ? `<button class="go" id="b-tstop">Start my quests here</button>` : `<button class="go" id="b-home2">Back to the Skill Tree</button>`}</div></div>`;
+  }
+  const p = T.picks[T.idx], left = Math.round(T.ends - Date.now()) / 1000 | 0;
+  const bar = `<div class="trial-bar"><span class="label">Problem ${T.idx + 1} of ${T.picks.length}</span><span class="clock num ${left < 120 ? 'low' : ''}" id="tclock">${fmtClock(left)}</span><button class="ghost" id="b-tquit">Abandon (counts as a fail)</button></div>`;
+  if (p.kind === 'choice') return `${head}${bar}<div class="card mission-card"><fieldset><legend>${esc(p.q)}</legend>${p.options.map((o, i) => `<label class="opt"><input type="radio" name="tchk" id="tchk-${i}" value="${i}" ${T.chk === i ? 'checked' : ''}><span>${esc(o)}</span></label>`).join('')}</fieldset>
+      <div class="acts"><button class="go" id="b-tlock">Lock in answer</button></div></div>`;
+  if (p.kind === 'input') return `${head}${bar}<div class="card mission-card"><span class="label">Your mission${p.tool || d.tool ? ` · in ${esc(p.tool || d.tool)}` : ''}</span><div class="prose">${prose(p.goal)}</div>
+      <label class="label" for="tans">Your answer</label>
+      <input id="tans" class="editor" autocomplete="off" spellcheck="false" value="${esc(T.draft || '')}">
+      <div class="acts"><button class="go" id="b-tlock">Lock in answer</button></div></div>`;
+  const topic = S.topics.find(x => x.id === d.sandboxTopic);
+  return `${head}${bar}<div class="card mission-card"><span class="label">Your mission</span><div class="prose">${prose(p.goal)}</div>
+      ${schemaHtml(topic?.sandbox || {})}
+      <label class="label" for="tsql">Your SQL <span style="text-transform:none;letter-spacing:0">(Ctrl + Enter runs it)</span></label>
+      <textarea id="tsql" class="editor" spellcheck="false" autocapitalize="off" autocomplete="off" rows="7">${esc(T.draft || '')}</textarea>
+      <div class="acts"><button id="b-trun" ${T.loading ? 'disabled' : ''}>${T.loading ? 'Loading data…' : 'Run'}</button><button class="go" id="b-tlock" ${T.loading ? 'disabled' : ''}>Lock in answer</button></div>
+      ${T.err ? `<p class="fb fail">${esc(T.err)}</p>` : ''}<div id="out">${T.out || ''}</div></div>`;
+}
+// Unseen trial data: files listed on the trial (dataFiles: [{name, path}], optional tool), loaded before the clock starts.
+function trialDataHtml(T, d, st) {
+  const files = (d.dataFiles || []).filter(f => f && f.path);
+  if (!files.length) return '';
+  return `<div class="card"><p><b>Before you start the clock:</b> part of this trial uses data you haven't seen. Get the files and load them first. Loading isn't timed.</p>
+    <p class="why">${d.tool ? `Load them in ${esc(d.tool)}. ` : ''}Files: ${files.map(f => `<b>${esc(f.name || f.path.split('/').pop())}</b>`).join(', ')}.</p><div class="acts"><button id="b-tdata" ${T.dataBusy ? 'disabled' : ''}>${T.dataBusy ? 'Packing…' : 'Get the trial data'}</button></div>${T.dataMsg ? `<p class="why">${esc(T.dataMsg)}</p>` : ''}</div>`;
+}
+async function downloadTrialData() {
+  const T = S.trial, d = trialDoc(); if (!T || !d || T.dataBusy) return;
+  const files = (d.dataFiles || []).filter(f => f && f.path); if (!files.length) return;
+  T.dataBusy = true; T.dataMsg = ''; render();
+  try {
+    const dl = await window.claude?.use?.('downloads');
+    if (!dl) throw { code: 'unavailable' };
+    if (!window.JSZip) await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js');
+    const slug = `${d.stat || 'trial'}-L${d.level || T.level}-trial-data`, zip = new window.JSZip(), dir = zip.folder(slug);
+    for (const f of files) { const r = await fetch(f.path); if (!r.ok) throw new Error('data'); dir.file(f.name || f.path.split('/').pop(), await r.blob()); }
+    await dl.save({ filename: `${slug}.zip`, data: await zip.generateAsync({ type: 'blob' }) });
+    T.dataMsg = 'Saved. Find it in Downloads, right-click, Extract All, then load it.';
+  } catch (e) {
+    console.error(e);
+    T.dataMsg = e && e.code === 'declined' ? "Download cancelled. Press the button again when you're ready." : "Couldn't get the data just now. Try again in a moment.";
+  }
+  T.dataBusy = false; render();
+}
+let trialTimer = null;
+async function startTrial() {
+  const T = S.trial, d = trialDoc(), topic = S.topics.find(x => x.id === d.sandboxTopic);
+  const shuf = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
+  const n = trialPick(T, d), unseen = shuf(d.problems.filter(p => p.unseen)), need = (d.level || T.level) >= 3 ? Math.min(unseen.length, Math.ceil(n / 2)) : 0;
+  const picks = shuf([...unseen.slice(0, need), ...shuf([...unseen.slice(need), ...d.problems.filter(p => !p.unseen)]).slice(0, n - need)]);
+  Object.assign(T, { phase: 'run', picks, idx: 0, results: [], ends: Date.now() + trialMinutes(T, d) * 60000, draft: '', out: '', err: '', loading: !!topic });
+  clearInterval(trialTimer);
+  trialTimer = setInterval(() => {
+    if (S.trial?.phase !== 'run') { clearInterval(trialTimer); return; }
+    const left = (S.trial.ends - Date.now()) / 1000 | 0, el = $('#tclock');
+    if (el) { el.textContent = fmtClock(left); el.classList.toggle('low', left < 120); }
+    if (left <= 0) finishTrial();
+  }, 1000);
+  render();
+  if (topic) {
+    try { T.db = await freshDb(topic.sandbox); T.ans = await freshDb(topic.sandbox); } catch (e) { console.error(e); T.err = 'Couldn\'t load the trial data. Check your connection.'; }
+    T.loading = false; render();
+  }
+}
+function runTrialSql(sql) {
+  const T = S.trial;
+  try { const r = lastResult(T.db.exec(sql)); T.out = tableHtml(r); T.err = ''; return r; } catch (e) { T.out = ''; T.err = friendlyError(e.message); return undefined; }
+}
+function lockTrial() {
+  const T = S.trial, p = T.picks[T.idx];
+  let ok = false;
+  if (p.kind === 'choice') { if (T.chk === undefined) { toast('Pick an answer first.'); return; } ok = T.chk === p.answer; }
+  else if (p.kind === 'input') {
+    const v = ($('#tans')?.value || T.draft || '').trim();
+    if (!v) { toast('Type your answer first.'); return; }
+    ok = (p.accept || []).some(a => normAns(a) === normAns(v));
+  } else {
+    const sql = ($('#tsql')?.value || T.draft || '').trim();
+    if (!sql) { toast('Write a query first.'); return; }
+    const r = runTrialSql(sql);
+    if (r !== undefined) { try { ok = compare(r, lastResult(T.ans.exec(p.answer)), p.ordered).ok; } catch (e) { ok = false; } }
+  }
+  T.results.push(ok); T.idx++; T.draft = ''; T.out = ''; T.err = ''; T.chk = undefined;
+  sfx.flip();
+  if (T.idx >= T.picks.length) finishTrial(); else { render(); window.scrollTo(0, 0); }
+}
+async function placeOut(topicId, level) {
+  const t = S.topics.find(x => x.id === topicId), ids = (t?.placement || {})[level] || [];
+  if (!t || !ids.length) return;
+  const quests = t.quests.map(q => ids.includes(q.id) && !q.completedOn ? { ...q, completedOn: today(), placed: true, taskDone: true, stepsDone: (q.steps || []).length } : q);
+  await write('topics/' + t.id, { quests }); t.quests = quests;
+  for (const c of S.cards.filter(c => c.topic === t.id && ids.includes(c.quest) && !c.due)) await write('cards/' + c.id, { due: addDays(1), gapIdx: 0 });
+}
+function finishTrial() {
+  const T = S.trial, d = trialDoc(); if (!T || T.phase !== 'run') return;
+  clearInterval(trialTimer);
+  while (T.results.length < T.picks.length) T.results.push(false);
+  T.score = T.results.filter(Boolean).length; T.phase = 'done';
+  try { T.db?.close(); T.ans?.close(); } catch (e) { /* ignore */ }
+  const st = S.stats.find(x => x.id === T.stat), pass = T.score >= trialPass(T, d), lad = st.ladder?.[T.level - 1];
+  render();
+  guarded(async () => {
+    await logEvent('trialresult', T.placement || null, 0, `${st.id} L${T.level}${T.placement ? ' placement' : ''}: ${T.picks.map((p, i) => p.id + (T.results[i] ? ' ok' : ' missed')).join(', ')}`);
+    if (T.placement) await markPlacementDone(T.placement);
+    if (pass) {
+      await write('stats/' + st.id, { mastery: T.level, masteryOn: today() });
+      if (T.placement) {
+        // A role topic can start above level 1: passing level n also places out the quests of the levels under it.
+        const tp = S.topics.find(x => x.id === T.placement);
+        const lvls = tp?.fromRole ? Object.keys(tp.placement || {}).map(Number).filter(l => l <= T.level).sort((a, b) => a - b) : [T.level];
+        for (const l of lvls) await placeOut(T.placement, l);
+      }
+      st.mastery = T.level;
+      const up = await award(st.id, XP.trial, 'trial', null, `${st.name} ${lad?.name || ''}`);
+      celebrate({ kicker: `Rank up · ${st.name}`, title: `${lad?.name || ''} (${T.level}/7)`, sub: lad?.can, badge: String(T.level), tier: tierOfMastery(T.level), sound: sfx.level, confetti: true, xp: XP.trial, ok: 'Earned it' });
+      showUps(up);
+    } else {
+      await write('stats/' + st.id, { trialFails: { [T.level]: today() } });
+      sfx.fail();
+    }
+    render();
+  });
+}
+function bindTrial() {
+  const T = S.trial, on = (id, fn) => { const b = $('#' + id); if (b) b.onclick = fn; };
+  on('b-tstart', startTrial);
+  on('b-home2', () => go({ name: 'home' }));
+  on('b-tnext', () => { S.trial = { stat: T.stat, level: T.level + 1, phase: 'intro', placement: T.placement }; render(); window.scrollTo(0, 0); });
+  on('b-tstop', () => { markPlacementDone(T.placement).catch(e => console.error(e)); go({ name: 'topic', topic: T.placement }); });
+  on('b-tquit', () => { if (T.quitArmed) { finishTrial(); return; } T.quitArmed = true; const b = $('#b-tquit'); if (b) b.textContent = 'Tap again to abandon'; });
+  on('b-tlock', lockTrial);
+  on('b-trun', () => { T.draft = $('#tsql')?.value || ''; runTrialSql(T.draft); render(); });
+  document.querySelectorAll('input[name="tchk"]').forEach(r => r.onchange = () => { T.chk = Number(r.value); });
+  const ta = $('#tans');
+  if (ta) { ta.oninput = () => { T.draft = ta.value; }; ta.onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); lockTrial(); } }; }
+  const ed = $('#tsql');
+  if (ed) {
+    ed.oninput = () => { T.draft = ed.value; };
+    ed.onkeydown = e => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); T.draft = ed.value; runTrialSql(T.draft); render(); }
+      if (e.key === 'Tab') { e.preventDefault(); const pos = ed.selectionStart; ed.setRangeText('  ', pos, ed.selectionEnd, 'end'); T.draft = ed.value; }
+    };
+  }
+}
+
+// ---------- trophy hall: unique pixel trophies with a story ----------
+// 12 x 12 sprites. k outline, g/G gold, s/S silver, w white, r/R red, b/B brown, o orange, y yellow, c cyan, p purple, u blue, n green.
+const PAL = { k: '#1a1420', g: '#f2c14e', G: '#b8860b', s: '#c9d2e0', S: '#7d8aa3', w: '#f6f6f6', r: '#c8102e', R: '#7a0a1c', b: '#9a6434', B: '#5a3a1a', o: '#ff7a1a', y: '#ffd166', c: '#5fe3d0', p: '#a98bff', u: '#3b6fe0', n: '#3ddc84' };
+const ART = {
+  whistle: ['............', '..........rr', '.........r..', '..kkkkkk.r..', '.kssssssk...', 'kssswwssskkk', 'ksssssssskSk', 'kssssssssk..', '.kSSSSSSk...', '..kkkkkk....', '............', '............'],
+  satchel: ['....kkkk....', '...kB..Bk...', '..kB....Bk..', '.kkkkkkkkkk.', '.kbbbbbbbbk.', '.kbbbyybbbk.', '.kbbbyybbbk.', '.kbbbbbbbbk.', '.kBBBBBBBBk.', '.kbbbbbbbbk.', '.kkkkkkkkkk.', '............'],
+  rake: ['..........k.', '.........kbk', '........kbk.', '.......kbk..', '......kbk...', '.....kbk....', '....kbk.....', '.kkkkbkkkk..', 'kssssssssk..', 'kskskskskk..', 'k.k.k.k.k...', '............'],
+  key: ['............', '.kkkk.......', 'kgggGk......', 'kg..gk......', 'kg..gkkkkkkk', 'kgggGggggggk', '.kkkkkkgkgkk', '.......kgkgk', '........k.k.', '............', '............', '............'],
+  lens: ['...kkkk.....', '..kccwck....', '.kcwcccck...', '.kccccccck..', '.kcccccck...', '..kcccck....', '...kkkkb....', '.......bb...', '........bb..', '.........bb.', '..........bk', '............'],
+  stones: ['............', '....kkkk....', '...kSSSSk...', '...kssssk...', '..kkkkkkkk..', '.kSSSSSSSSk.', '.kssssssssk.', 'kkkkkkkkkkkk', 'kSSSSSSSSSSk', 'ksssSsssSssk', 'kkkkkkkkkkkk', '............'],
+  tablet: ['..kkkkkkkk..', '.kssssssssk.', 'kssssssssssk', 'ksSSSSSSSSsk', 'kssssssssssk', 'ksSSSSSSsssk', 'kssssssssssk', 'ksSSSSssssk.', 'kssssssssssk', 'ksSSSSSSSssk', 'kssssssssssk', '.kkkkkkkkkk.'],
+  banners: ['k.....k.....', 'krrrr.kuuuu.', 'krrrrrkuuuuu', 'krwrr.kuwuu.', 'krrrrrkuuuuu', 'krrrr.kuuuu.', 'k.....k.....', 'k.....k.....', 'k.....k.....', 'k.....k.....', 'kk....kk....', '............'],
+  hourglass: ['kkkkkkkkkk..', '.kbbbbbbk...', '.kyyyyyyk...', '..kyyyyk....', '...kyyk.....', '....kk......', '...k..k.....', '..k.yy.k....', '.k.yyyy.k...', '.kyyyyyyk...', '.kbbbbbbk...', 'kkkkkkkkkk..'],
+  boot: ['............', '.....kkkk...', '.....krrk...', '.ww..krrk...', 'wwww.krrk...', '.wwwkkrrk...', '..wwkrrrkkk.', '....krrrrrrk', '....krrrrrrk', '....kkkkkkkk', '.....w.w.w..', '............'],
+  cup: ['..kkkkkkkk..', 'kkgggyggGkk.', 'k.gggyggG.k.', 'k.gggyggG.k.', '.kgggggggk..', '..kgggggk...', '...kgggk....', '....kgk.....', '....kgk.....', '...kgggk....', '..kGGGGGk...', '..kkkkkkk...'],
+  orb: ['....kkkk....', '..kkppppkk..', '.kpwwpppppk.', '.kpwppppppk.', 'kppppppppppk', 'kppppppppppk', '.kppppppppk.', '.kppppppppk.', '..kkppppkk..', '....kkkk....', '...kbbbbk...', '..kBBBBBBk..'],
+  torch: ['.....o......', '....oyo.....', '...oyyyo....', '...oyyyo....', '....ooo.....', '...kkkkk....', '...kbbbk....', '....kbk.....', '....kbk.....', '....kbk.....', '....kbk.....', '....kkk.....'],
+  scroll: ['.kkkkkkkkkk.', 'kbbwwwwwwbbk', '.kwwwwwwwwk.', '.kwSSSSSSwk.', '.kwwwwwwwwk.', '.kwSSSSwwwk.', '.kwwwwwwwwk.', '.kwSSSSSwwk.', '.kwwwwwwrwk.', '.kwwwwwrrrk.', 'kbbwwwwwrbbk', '.kkkkkkkkkk.'],
+  shield: ['.kkkkkkkkkk.', 'kssssssssssk', 'ksSSSrrSSSsk', 'ksSSrrrrSSsk', 'ksSSSrrSSSsk', 'ksSSSrrSSSsk', '.ksSSrrSSsk.', '.ksSSSSSSsk.', '..ksSSSSsk..', '...ksSSsk...', '....kssk....', '.....kk.....'],
+  tome: ['............', '.kkkkkkkkkk.', '.kuuuuuuuuk.', '.kuyyyyyyuk.', '.kuuuuuuuuk.', '.kuuuyyuuuk.', '.kuuuuuuuuk.', '.kuuuuuuuuk.', '.kwwwwwwwwk.', '.kkkkkkkkkk.', '............', '............'],
+  sword: ['..........kk', '.........kwk', '........kwk.', '.......kwk..', '......kwk...', '.....kwk....', '..k.kwk.....', '..kkwk......', '...kgk......', '..kgkgk.....', '.kgk.kk.....', '.kk.........'],
+  bolt: ['......kkkk..', '.....kyyyk..', '....kyyyk...', '...kyyyk....', '..kyyyykkk..', '.kyyyyyyyk..', '..kkkyyyk...', '....kyyk....', '...kyyk.....', '..kyyk......', '..kyk.......', '..kk........'],
+  twin: ['k..........k', 'wk........kw', '.wk......kw.', '..wk....kw..', '...wk..kw...', '....wkkw....', '....kwwk....', '...kw..wk...', '.gkw....wkg.', '..gk....kg..', '.g..g..g..g.', '............'],
+  diamond: ['............', '..kkkkkkkk..', '.kcwccccwck.', 'kcccccccccck', 'kkkkkkkkkkkk', '.kcccccccck.', '..kcccccck..', '...kcccck...', '....kcck....', '.....kk.....', '............', '............'],
+};
+const artCache = {};
+function artImg(name, locked, size = 48, title = '') {
+  const key = name + (locked ? ':l' : ':u');
+  if (!artCache[key]) {
+    const c = document.createElement('canvas'); c.width = 12; c.height = 12;
+    const ctx = c.getContext('2d'), sil = getComputedStyle(document.documentElement).getPropertyValue('--line').trim() || '#243052';
+    (ART[name] || []).forEach((row, y) => [...row].forEach((ch, x) => { if (PAL[ch]) { ctx.fillStyle = locked ? sil : PAL[ch]; ctx.fillRect(x, y, 1, 1); } }));
+    artCache[key] = c.toDataURL();
+  }
+  return `<img class="px${locked ? ' locked' : ''}" src="${artCache[key]}" width="${size}" height="${size}" alt="${esc(title)}" title="${esc(title)}">`;
+}
+
+const CHAPTERS = { 1: ['The Newcomer', 'You\'ve just walked in the door. Nobody knows your name yet.'], 2: ['The Specialist', 'People start asking for you by name.'], 3: ['The Legend', 'They\'ll tell stories about your work.'] };
+const topicQ = (t, q) => (S.topics.find(x => x.id === t)?.quests || []).find(x => x.id === q);
+const stepAt = (t, q, n) => () => { const x = topicQ(t, q); return x ? Math.min(1, (x.stepsDone || 0) / n) : 0; };
+const questP = (t, q) => () => { const x = topicQ(t, q); if (!x) return 0; if (x.completedOn) return 1; return Math.min(.95, (x.stepsDone || 0) / ((x.steps || []).length || 1) * .9 + ((x.quizBest || 0) >= 2 ? .05 : 0)); };
+const maxMastery = () => Math.max(0, ...S.stats.map(st => st.mastery || 0));
+const ACH = [
+  { id: 'first-whistle', ch: 1, name: 'First Step', art: 'key', need: 'Clear your first step in any quest.', lore: 'Every journey starts with one small step. Yours just happened.', prog: () => S.topics.some(t => (t.quests || []).some(q => (q.stepsDone || 0) > 0 || q.completedOn)) ? 1 : 0 },
+  { id: 'lightning-bottle', ch: 2, name: 'Lightning in a Bottle', art: 'bolt', need: 'Clear 5 steps in a row first time: no fails, no hints, no shown answer.', lore: 'Five in a row without a wobble. By the fourth, you\'d stopped holding your breath.', prog: () => Math.min(1, (S.player.bestCombo || 0) / 5) },
+  { id: 'two-fronts', ch: 2, name: 'War on Two Fronts', art: 'twin', need: 'Clear a quest in two different topics.', lore: 'One hand on the main quest, one on the side. You never dropped either.', prog: () => Math.min(1, S.topics.filter(t => (t.quests || []).some(q => q.completedOn && !q.placed)).length / 2) },
+  { id: 'proven', ch: 2, name: 'The Proven Shield', art: 'shield', need: 'Pass your first Rank Trial.', lore: 'No hints, no help, the clock running. You held your ground.', prog: () => Math.min(1, maxMastery()) },
+  { id: 'flawless-mind', ch: 3, name: 'The Professor\'s Orb', art: 'orb', need: 'Score 3/3 on 5 quizzes.', lore: 'Five tests without a slip. Even the Professor raised an eyebrow.', prog: () => Math.min(1, (S.player.flawless || 0) / 5) },
+  { id: 'eternal-flame', ch: 3, name: 'Eternal Flame', art: 'torch', need: 'Reach a 7-day streak.', lore: 'Seven days straight. The light at your desk never goes out now.', prog: () => Math.min(1, (S.player.bestStreak || 0) / 7) },
+  { id: 'scholars-tome', ch: 3, name: 'The Scholar\'s Tome', art: 'tome', need: 'Answer 25 review cards right.', lore: 'What you learn once, you keep. The tome gets heavier every week.', prog: () => Math.min(1, (S.player.cardsGot || 0) / 25) },
+  { id: 'sharpened-blade', ch: 3, name: 'Sharpened Blade', art: 'sword', need: 'Prove Advanced (5/7) in any skill.', lore: 'Your skill has an edge now. People bring you the hard problems.', prog: () => Math.min(1, maxMastery() / 5) },
+  { id: 'diamond-heart', ch: 3, name: 'Diamond Heart', art: 'diamond', need: 'Prove Master (7/7) in any skill.', lore: 'Top of the ladder. Few ever get here. This one is yours for life.', prog: () => Math.min(1, maxMastery() / 7) },
+];
+// Global trophies plus each topic's own (topic.trophies: id, ch, name, need, lore, art or sprite, when).
+function topicAch() {
+  return S.topics.flatMap(t => (t.trophies || []).map(tr => {
+    let art = tr.art;
+    if (tr.sprite) { art = `t:${t.id}:${tr.id}`; ART[art] = tr.sprite; }
+    const w = tr.when || {};
+    const prog = w.step ? stepAt(t.id, w.quest, w.step) : w.quest ? questP(t.id, w.quest) : () => (t.status === 'done' ? 1 : 0);
+    return { ...tr, ch: tr.ch || 2, art, prog };
+  }));
+}
+const allAch = () => [...ACH, ...topicAch()];
+const trophyOn = a => (S.player.trophies || {})[a.id];
+const pendingTrophies = new Set();
+function renderShelf() {
+  const el = $('#shelf'); if (!el) return;
+  const ach = allAch(), got = ach.filter(trophyOn).sort((x, y) => String(trophyOn(x)).localeCompare(String(trophyOn(y))));
+  const next = ach.filter(a => !trophyOn(a)).sort((x, y) => y.prog() - x.prog()).slice(0, Math.max(0, 3 - got.length));
+  el.innerHTML = got.slice(-8).map(a => artImg(a.art, false, 30, a.name)).join('') + (got.length > 8 ? `<span class="more">+${got.length - 8}</span>` : '')
+    + next.map(a => artImg(a.art, true, 30, `Locked: ${a.name}. ${a.need}`)).join('')
+    + `<button class="ghost shelf-btn" id="b-trophies">${got.length}/${ach.length}</button>`;
+  $('#b-trophies').onclick = () => go({ name: 'trophies' });
+  // Unlock anything newly earned: save the date, then show it.
+  if (!S.loaded || !S.db || !S.player.exists) return;
+  for (const a of ach) {
+    if (trophyOn(a) || pendingTrophies.has(a.id) || a.prog() < 1) continue;
+    pendingTrophies.add(a.id);
+    write('player/me', { trophies: { [a.id]: today() } }).then(() => {
+      S.player.trophies = { ...(S.player.trophies || {}), [a.id]: today() };
+      celebrate({ kicker: `Trophy earned · Chapter ${a.ch}: ${CHAPTERS[a.ch][0]}`, title: a.name, sub: a.lore, tier: a.ch === 3 ? 'gold' : a.ch === 2 ? 'silver' : 'bronze', art: artImg(a.art, false, 96, a.name), sound: sfx.level, confetti: true, ok: 'Into the cabinet' });
+      renderShelf();
+    }).catch(e => { console.error(e); pendingTrophies.delete(a.id); });
+  }
+}
+function trophiesView() {
+  const fmt = d => new Date(d + 'T12:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+  const ach = allAch(), got = ach.filter(trophyOn).length;
+  return `<button class="back ghost" id="b-home">← Skill Tree</button>
+    <div><span class="label">Trophy Hall</span><h1 style="font-size:1.6rem">${got} of ${ach.length} trophies</h1></div>
+    ${[1, 2, 3].map(ch => `<section class="sec"><h2>Chapter ${ch}: ${CHAPTERS[ch][0]}</h2><p class="hint">${CHAPTERS[ch][1]}</p>
+      <div class="trophies">${ach.filter(a => a.ch === ch).map(a => {
+        const on = trophyOn(a), pr = a.prog();
+        return `<div class="trophy ${on ? 'on' : 'off'}">${artImg(a.art, !on, 64, a.name)}<div><b>${on ? esc(a.name) : esc(a.name)}</b>
+          <p class="need">${esc(a.need)}</p>
+          ${on ? `<p class="lore">“${esc(a.lore)}”</p><span class="label">Earned ${fmt(on)}</span>`
+            : `<div class="bar"><i style="width:${Math.round(pr * 100)}%"></i></div><p class="lore dim">Story locked. Earn it to read it.</p>`}</div></div>`;
+      }).join('')}</div></section>`).join('')}`;
+}
+
+// ---------- views ----------
+function go(view) { if (S.trial?.phase === 'run' && view.name !== 'trial') finishTrial(); if (view.name === 'creator') S.make = null; S.view = view; S.quiz = {}; render(); window.scrollTo(0, 0); }
+function tween(el, to) {
+  const from = Number(el.dataset.v || 0); el.dataset.v = to;
+  if (reduced() || from === to) { el.textContent = to.toLocaleString('en-GB'); return; }
+  const t0 = performance.now();
+  (function f(t) { const k = Math.min(1, (t - t0) / 600); el.textContent = Math.round(from + (to - from) * (1 - (1 - k) ** 3)).toLocaleString('en-GB'); if (k < 1) requestAnimationFrame(f); })(t0);
+}
+function renderHud() {
+  const xp = S.player.xp || 0, r = rankOf(xp);
+  const frac = r.next ? (xp - r.from) / (r.next[0] - r.from) : 1;
+  $('#hud').className = 'hud t-' + r.tier;
+  drawAvatar(r); drawPet($('#pet')); $('#rank').textContent = r.name; renderShelf();
+  const nm = playerName(); document.title = nm ? nm + "'s Skill Tree" : 'My Skill Tree'; $('#who').textContent = nm ? nm + "'s Skill Tree" : 'Skill Tree';
+  const on = Math.round(frac * CELLS);
+  $('#cells').innerHTML = Array.from({ length: CELLS }, (_, i) => `<i class="${i < on ? 'on' : ''}"></i>`).join('');
+  tween($('#g-xp'), xp);
+  $('#to-next').textContent = r.next ? `${(r.next[0] - xp).toLocaleString('en-GB')} to ${r.next[1]}` : 'Top rank';
+  const s = S.player.streak || 0, st = $('#streak'), ft = fireTier(s);
+  st.textContent = `🔥 ${s}-day streak${ft ? ' · ' + ft[1] : ''}`; st.className = 'chip num' + (s ? '' : ' cold');
+  if (fire.lastStreak !== s) { fire.lastStreak = s; startFire(s); }
+  $('#b-mute').textContent = sfx.muted() ? '🔇' : '🔊';
+  const lookBtn = $('#b-look'); if (lookBtn) lookBtn.hidden = S.trial?.phase === 'run';
+  const run = todayRun(), due = dueCards().length;
+  $('#today').innerHTML = `<span class="label">Today's run</span>
+    <div class="goal ${run.cards >= 3 ? 'hit' : ''}"><div class="row"><span>Review cards</span><span class="num">${run.cards}/3${due ? ` · ${due} due` : ''}</span></div><div class="bar sharp"><i style="width:${Math.min(100, run.cards / 3 * 100)}%"></i></div></div>
+    <div class="goal ${run.quests ? 'hit' : ''}"><div class="row"><span>Quest</span><span class="num">${run.quests}/1</span></div><div class="bar sharp"><i style="width:${run.quests ? 100 : 0}%"></i></div></div>
+    <div class="goal ${run.counted ? 'hit' : ''}"><div class="row"><span>Streak day</span><span>${run.counted ? 'Banked ✓' : 'Not yet'}</span></div><div class="bar sharp"><i style="width:${run.counted ? 100 : 0}%"></i></div></div>`;
+}
+
+// How a level is proven (skill audit, 05.11.26). Levels 5-7 also need outside evidence that Claude checks.
+function proofHtml(l) {
+  if (!l?.proof) return '';
+  return `<details class="srcs"><summary class="why">How it's proven</summary><p class="why">${esc(l.proof)}${l.evidence ? `<br><b>Outside evidence:</b> ${esc(l.evidence)}` : ''}</p></details>`;
+}
+// Level-up quest: at the top level the page can test, ask Claude to research and build the next level.
+function levelUpHtml(st, m, nxt) {
+  if (m < 1 || !nxt.quest) return '<span class="why">No trial yet. It comes with a harder topic.</span>';
+  const req = S.requests.find(r => r.kind === 'levelup' && r.stat === st.id && r.level === m + 1 && r.status !== 'built');
+  if (req) return `<p class="why"><b>Being prepared:</b> ${esc(nxt.quest)}. Claude researches and builds it next time you run /learn.</p>${req.status === 'queued' ? `<button class="ghost" data-lvundo="${esc(req.id)}">Undo</button>` : ''}`;
+  if (S.lvConfirm === st.id) return `<p class="why"><b>Are you sure?</b> Claude will research what ${esc(nxt.name)} (${m + 1}/7) takes in the real world, then build new quests and a Rank Trial for it. It shows in your Quest Log once built.</p>
+      <div class="acts"><button class="go" data-lvyes="${esc(st.id)}">Yes, build it</button><button class="ghost" data-lvno="1">Not now</button></div>`;
+  return `<button class="go" data-levelup="${esc(st.id)}">Quest: ${esc(nxt.quest)}</button><span class="why">You're at the top level the page can test now. This asks Claude to build the next one.</span>`;
+}
+// Ready for a Rank Trial: the next level's trial exists and every quest it covers (topic placement maps) is cleared.
+function trialReady() {
+  return S.stats.map(st => {
+    const lv = (st.mastery || 0) + 1, trial = S.trials.find(x => x.stat === st.id && x.level === lv);
+    if (!trial || retryOn(st, lv)) return null;
+    const need = S.topics.filter(t => t.stat === st.id && t.placement?.[lv]).flatMap(t => t.placement[lv].map(id => (t.quests || []).find(q => q.id === id)).filter(Boolean));
+    if (!need.length || need.some(q => !q.completedOn)) return null;
+    return { st, lv, lad: st.ladder?.[lv - 1], trial };
+  }).filter(Boolean);
+}
+function homeView() {
+  if (!S.loaded) return `<div class="empty"><b>Loading your progress…</b></div>`;
+  const line = questLine(), due = dueCards().length;
+  const reviewRow = due ? `<div class="mission side"><span></span><div><span class="label">Review · all topics mixed</span><h3>${due} card${due > 1 ? 's' : ''} due</h3><span class="row" style="justify-content:flex-start">2 min. Keeps what you learned from going rusty.</span></div><div class="acts"><button class="go" id="b-review">Review</button></div></div>` : '';
+  const fresh = S.cards.filter(c => c.remind), rf = fresh.slice(0, 3).map(c => `<div class="mission side"><span></span><div><span class="label">Refresher · ${esc(S.topics.find(t => t.id === c.topic)?.title || '')}</span><h3>${esc(c.front.length > 70 ? c.front.slice(0, 67) + '…' : c.front)}</h3><span class="row" style="justify-content:flex-start">2 min. You forgot this one, so here's the lesson again.</span></div><div class="acts"><button class="go" data-refresh="${esc(c.id)}">Refresh</button></div></div>`).join('')
+    + (fresh.length > 3 ? `<p class="why">+${fresh.length - 3} more refresher${fresh.length > 4 ? 's' : ''} after these.</p>` : '');
+  // Accepted role gap offers sit in the log as "Being prepared" until /learn builds them, so an accept never looks lost.
+  const prep = S.offers.filter(o => o.status === 'accepted').map(o => `<div class="mission side"><img class="g-sprite" src="${spriteUrl(NPCS[o.npc] || NPCS.mentor)}" alt="">
+        <div><span class="label">Being prepared · ${esc(o.skill)}</span><h3>${esc(o.title)}</h3>
+        <span class="row" style="justify-content:flex-start">Accepted. Claude builds it next time you run /learn, then you can start.</span></div>
+        <div class="acts"><button class="ghost" data-undo="${esc(o.id)}">Undo</button></div></div>`).join('');
+  const ready = trialReady().map(({ st, lv, lad, trial }) => `<div class="mission side"><span></span><div><span class="label">Ready for a Rank Trial · ${esc(st.name)}</span>
+        <h3>Take the ${esc(lad?.name || 'Level ' + lv)} trial (${lv}/7)</h3><span class="row" style="justify-content:flex-start">You've cleared every quest it covers. ${trial.minutes} min, timed, no hints.</span></div>
+        <div class="acts"><button class="go" data-trial="${esc(st.id)}:${lv}">Take it</button></div></div>`).join('');
+  const mission = line.length || prep || rf || ready ? `<section class="sec" aria-label="Quest Log"><h2>Quest Log</h2><div class="qlog">${reviewRow}${ready}${rf}${line.map(({ topic: t, quest: q, main }) => {
+      const qs = t.quests || [], n = qs.indexOf(q) + 1;
+      return `<div class="mission ${main ? 'main' : 'side'}">${guideOf(t) ? guideCanvas(t) : '<span></span>'}
+        <div><span class="label">${main ? 'Main quest' : 'Side quest'} · ${esc(t.title)}</span><h3>${q.boss ? 'Boss: ' : ''}${esc(q.title)}</h3>
+        <span class="row" style="justify-content:flex-start">Quest ${n} of ${qs.length} · About ${q.minutes || 15} min${(q.stepsDone || 0) && q.steps ? ` · step ${Math.min(q.stepsDone + 1, q.steps.length)} of ${q.steps.length}` : ''}</span></div>
+        <div class="acts">${untouched(t) && t.acceptedOn ? `<button class="ghost" data-giveback="${esc(t.id)}">Give it back</button>` : ''}${main ? '' : `<button class="ghost" data-main="${esc(t.id)}">Make main</button>`}<button class="${main ? 'go' : ''}" data-resume="${esc(t.id)}">Resume</button></div></div>`;
+    }).join('')}${prep}</div></section>`
+    : due ? `<section class="sec"><h2>Quest Log</h2><div class="qlog">${reviewRow}</div></section>`
+    : `<div class="empty"><b>No quest running.</b><span>Accept one from the Quest Board below, or send a link in Request training.</span></div>`;
+
+  const tierName = { bronze: 'Bronze', silver: 'Silver', gold: 'Gold', plat: 'Platinum', diamond: 'Diamond' };
+  const stats = S.stats.length ? `<div class="grid">${S.stats.slice().sort((a, b) => (b.mastery || 0) - (a.mastery || 0) || (b.xp || 0) - (a.xp || 0)).map(st => {
+      const m = st.mastery || 0, lad = st.ladder || [], cur = lad[m - 1], nxt = lad[m], tier = tierOfMastery(m);
+      const trial = S.trials.find(x => x.stat === st.id && x.level === m + 1), cool = retryOn(st, m + 1);
+      const overdue = S.cards.filter(c => c.stat === st.id && c.due && c.due < today()).length;
+      const topics = S.topics.filter(t => t.stat === st.id || (t.quests || []).some(q => q.stat === st.id)), open = topics.filter(t => t.status !== 'done').length;
+      return `<div class="skill t-${tier}">${hex(m ? String(m) : '?')}<h3>${esc(st.name)}</h3><span class="tag">Mastery ${m}/7 · ${cur ? esc(cur.name) : 'Not rated yet'}${st.area === 'job' ? ' · Skill for your role' : ''}</span>
+        <div class="ladder" aria-label="Mastery ${m} of 7">${[1, 2, 3, 4, 5, 6, 7].map(i => `<i class="${i <= m ? 'on' : ''}" title="${esc(lad[i - 1]?.name || '')}"></i>`).join('')}</div>
+        <p class="note">${cur ? `<b>You can:</b> ${esc(cur.can)}<br><span class="bench">${esc(cur.benchmark)}</span>` : 'Not proven yet. Pass the Novice trial to get rated.'}</p>
+        ${nxt ? `<div class="next-rank"><p><span class="label">Next: ${esc(nxt.name)}</span><br>${esc(nxt.can)}</p>${proofHtml(nxt)}${trial ? (cool ? `<button disabled>Failed. Retry ${esc(dayName(cool))}</button>` : `<button class="go" data-trial="${esc(st.id)}:${m + 1}">Take the ${esc(nxt.name)} trial</button>`) : levelUpHtml(st, m, nxt)}</div>` : '<p class="note"><b>Top of the ladder.</b></p>'}
+        ${overdue ? `<div class="rust"><div class="row" style="color:inherit"><span>Rusty: ${overdue} review card${overdue > 1 ? 's' : ''} overdue</span><span class="num">${sharpness(st.id)}%</span></div><div class="bar sharp dull"><i style="width:${sharpness(st.id)}%"></i></div></div>` : ''}
+        <p class="note why">Practice: <span class="num">${(st.xp || 0).toLocaleString('en-GB')}</span> XP · ${topics.length ? `${topics.length} topic${topics.length > 1 ? 's' : ''}, ${open} in progress` : `no quests yet`}</p></div>`;
+    }).join('')}</div>`
+    : `<div class="empty"><b>No skills yet.</b><span>Each skill you start (SQL, Power BI, a language) gets a card here.</span></div>`;
+
+  const shownTopics = S.topics.filter(t => t.status !== 'offered');
+  const topics = shownTopics.length ? `<div class="list">${shownTopics.slice().sort((a, b) => (a.status === 'done') - (b.status === 'done')).map(t => {
+      const qs = t.quests || [], done = qs.filter(q => q.completedOn).length, nowIdx = qs.findIndex(q => !q.completedOn);
+      return `<button class="tile" data-topic="${esc(t.id)}"><div><b>${esc(t.title)}</b><small>${esc(t.project || '')}${t.status === 'done' ? ' · Done' : t.status === 'paused' ? ' · Paused' : ` · ${done}/${qs.length} quests`}</small></div>
+        <span class="pips" aria-label="${done} of ${qs.length} quests done">${qs.map((q, i) => `<i class="${q.completedOn ? 'on' : i === nowIdx ? 'now' : ''}"></i>`).join('')}</span></button>`;
+    }).join('')}</div>` : '';
+
+  const shown = S.log.filter(e => e.xp > 0);
+  const hist = shown.length ? `<div class="hist">${shown.slice(-6).reverse().map(e => `<div><span class="num">${esc(e.on.slice(5))}</span><span>${esc({ quest: 'Quest cleared', quiz: 'Quiz passed', card: 'Card reviewed', flawless: 'Flawless quiz', project: 'Project shipped', topic: 'Topic finished', step: 'Step cleared' }[e.type] || e.type)}${e.note ? `: ${esc(e.note)}` : ''}</span><span class="xp num">+${e.xp}</span></div>`).join('')}</div>` : '';
+
+  return `${mission}${questBoard()}<section class="sec"><h2>Skills</h2><p class="hint">Mastery shows what you can really do, on a fixed 1 to 7 scale. Master (7) is the top few percent. Quests train you, but only a <b>Rank Trial</b> moves you up: new problems, no hints, a time limit, 3 of 4 to pass.</p>${stats}</section>
+    ${topics ? `<section class="sec"><h2>Topics</h2>${topics}</section>` : ''}
+    <section class="sec"><h2>Trophy Hall</h2><div class="trophies">${allAch().filter(a => !trophyOn(a)).sort((x, y) => y.prog() - x.prog()).slice(0, 3).map(a => `<div class="trophy off">${artImg(a.art, true, 64, a.name)}<div><b>${esc(a.name)}</b><p class="need">${esc(a.need)}</p><div class="bar"><i style="width:${Math.round(a.prog() * 100)}%"></i></div></div></div>`).join('')}</div>
+      <button class="ghost" id="b-hall" style="align-self:flex-start">See all ${allAch().length} trophies →</button></section>
+    ${hist ? `<section class="sec"><h2>Match history</h2>${hist}</section>` : ''}`;
+}
+
+function topicLine(t) {
+  const g = guideOf(t); if (!g) return '';
+  const qs = t.quests || [], done = qs.filter(q => q.completedOn).length, next = qs.find(q => !q.completedOn);
+  if (!next) return g.lines.done;
+  if (!done && !(qs[0]?.stepsDone)) return g.lines.hello;
+  return `${pickLine(g.lines.back, done)} Next up: ${next.boss ? 'the boss fight, ' : ''}"${next.title}". About ${next.minutes || 15} min.`;
+}
+// Course length from the quest estimates: full, and what's left (part-done quests count their steps left).
+const fmtMin = m => { m = Math.round(m); const h = Math.floor(m / 60), r = m % 60; return h ? `${h}h${r ? ` ${r}m` : ''}` : `${r} min`; };
+function topicTime(t) {
+  const qs = t.quests || [];
+  const full = qs.reduce((a, q) => a + (q.minutes || 15), 0);
+  const left = qs.filter(q => !q.completedOn).reduce((a, q) => {
+    const n = q.steps?.length || 0, d = Math.min(q.stepsDone || 0, n);
+    return a + (q.minutes || 15) * (n ? (n - d) / n : 1);
+  }, 0);
+  const n = qs.filter(q => !q.completedOn).length;
+  return `<p class="why"><b>Full course:</b> ${fmtMin(full)} over ${qs.length} quests · <b>Left:</b> ${n ? `${fmtMin(left)} (${n} quest${n > 1 ? 's' : ''})` : 'none, all cleared'}. Times are estimates for a beginner.</p>`;
+}
+function topicView(t) {
+  const qs = t.quests || [];
+  return `<button class="back ghost" id="b-home">← Skill Tree</button>
+    ${guideBar(t, topicLine(t))}
+    ${placementPrompt(t)}
+    <div class="card"><span class="label">${esc(S.stats.find(s => s.id === t.stat)?.name || '')}</span><h3>${esc(t.title)}</h3>
+      ${t.project ? `<p><b>Project:</b> ${esc(t.project)}</p>` : ''}
+      ${topicTime(t)}
+      ${(t.sources || []).length ? `<details class="srcs"><summary class="why">Built from ${t.sources.length} source${t.sources.length > 1 ? 's' : ''}${t.sourceLength ? ` · ${esc(t.sourceLength)}` : ''}</summary><ul>${t.sources.map(x => `<li><a href="${esc(x.url)}" target="_blank" rel="noopener">${esc(x.title)}</a>${x.kind ? ` <span class="why">(${esc(x.kind)})</span>` : ''}</li>`).join('')}</ul></details>`
+        : t.sourceUrl ? `<p class="why">Source: <a href="${esc(t.sourceUrl)}" target="_blank" rel="noopener">${esc(t.sourceTitle || t.sourceUrl)}</a>${t.sourceLength ? ` · ${esc(t.sourceLength)}` : ''}</p>` : ''}</div>
+    ${topicExtras(t)}
+    <ol class="path">${qs.map((q, i) => {
+      const open = unlocked(t, i), now = open && !q.completedOn;
+      const cls = q.completedOn ? 'done' : now ? 'now' : 'locked';
+      return `<li class="node ${cls}"><button ${open ? `data-quest="${esc(q.id)}"` : 'disabled aria-disabled="true"'}><span class="dot">${q.completedOn ? '✓' : open ? i + 1 : '🔒'}</span>
+        <div><b>${q.mixed ? 'Mixed: ' : ''}${esc(q.title)}</b><small>${q.placed ? 'Placed out ' + esc(q.completedOn) : q.completedOn ? 'Cleared ' + esc(q.completedOn) : open ? `About ${q.minutes || 15} min` : `About ${q.minutes || 15} min · clear the one above first`}</small></div>
+        ${now ? '<canvas class="me-mini" width="14" height="20" aria-label="You are here"></canvas>' : ''}<span class="meta">${q.completedOn ? `+${XP.quest}` : `${XP.quest + XP.quiz} XP`}</span></button></li>`;
+    }).join('')}</ol>`;
+}
+
+function quizCard(q) {
+  const quiz = q.quiz || [], st = S.quiz, passed = (q.quizBest || 0) >= passMark(quiz.length) && quiz.length, pm = passMark(quiz.length);
+  const quizHtml = quiz.map((item, qi) => {
+    const pick = st.answers?.[qi];
+    return `<fieldset><legend>${qi + 1}. ${esc(item.q)}</legend>${(item.options || []).map((o, oi) => {
+      const cls = st.checked ? (oi === item.answer ? 'right' : oi === pick ? 'wrong' : '') : '';
+      return `<label class="opt ${cls}"><input type="radio" name="q${qi}" id="q${qi}-${oi}" value="${oi}" ${pick === oi ? 'checked' : ''} ${st.checked ? 'disabled' : ''}><span>${esc(o)}</span></label>`;
+    }).join('')}${st.checked && item.why ? `<p class="why">${esc(item.why)}</p>` : ''}</fieldset>`;
+  }).join('');
+  return `<div class="card ${passed ? 'done' : ''}"><div class="step ${passed ? 'done' : ''}"><b>${passed ? '✓' : '?'}</b><h3>Prove it</h3><span class="meta num why" style="margin-left:auto">${quiz.length ? `${pm}/${quiz.length} to pass · 3/3 flawless +${XP.flawless}` : ''}</span></div>
+    ${quiz.length ? `<form id="quiz" style="display:flex;flex-direction:column;gap:14px">${quizHtml}
+      ${st.checked ? `<p class="result ${st.score >= pm ? 'pass' : 'fail'}">${st.score}/${quiz.length}. ${st.score === quiz.length ? 'Flawless.' : st.score >= pm ? 'Passed.' : `Need ${pm} to pass. Have another go.`}</p>` : ''}
+      <div class="acts">${st.checked ? `<button type="button" id="b-retry">Try again</button>` : `<button class="go" type="submit">Check answers</button>`}</div></form>`
+      : '<p class="why">No quiz on this quest.</p>'}
+    ${q.completedOn ? `<p class="result pass">Quest cleared ${esc(q.completedOn)}.</p>` : ''}</div>`;
+}
+
+// Guided quest: one step at a time, run SQL in the page, auto-checked.
+function stepQuestView(t, q) {
+  const steps = q.steps, done = q.stepsDone || 0, allDone = done >= steps.length;
+  const idx = Math.min(S.view.step ?? done, steps.length);
+  const s = steps[idx], sb = t.sandbox || {};
+  const pips = steps.map((x, i) => {
+    const cls = i < done ? 'done' : i === done ? 'now' : 'locked';
+    return `<button class="spip ${cls}${i === idx ? ' sel' : ''}" ${i <= done ? `data-step="${i}"` : 'disabled'} aria-label="Step ${i + 1}${i < done ? ', cleared' : ''}">${i < done ? '✓' : i + 1}</button>`;
+  }).join('') + `<button class="spip ${allDone ? (q.completedOn ? 'done' : 'now') : 'locked'}${idx === steps.length ? ' sel' : ''}" ${allDone ? `data-step="${steps.length}"` : 'disabled'} aria-label="Quiz">?</button>`;
+  const [gl, mood] = stepLine(t, q, idx, s);
+  const head = `<button class="back ghost" id="b-topic">← ${esc(t.title)}</button>
+    <div><span class="label">${q.boss ? 'Boss fight · ' : q.mixed ? 'Mixed practice · no labels · ' : ''}${esc(t.title)}</span><h1 style="font-size:1.5rem">${esc(q.title)}</h1></div>
+    <div class="spips" role="navigation" aria-label="Steps">${pips}${(S.combo || 0) >= 2 ? `<span class="chip combo num" title="Steps cleared first time in a row">Combo x${S.combo}</span>` : ''}</div>
+    ${guideBar(t, gl, mood)}`;
+  if (!s) return head + quizCard(q) + (q.completedOn ? '' : '');
+  const cleared = idx < done;
+  // Branch before touching s.hints: do-steps (desktop tools) have none, or those quests wouldn't open.
+  if (s.kind === 'do') return head + doStepCard(t, q, s, idx, cleared);
+  if (s.kind === 'input') return head + inputStepCard(t, q, s, idx, cleared);
+  const sx = S.sbx, hintsShown = sx.hints || 0, canReveal = sx.fails >= 2 || hintsShown >= (s.hints || []).length;
+  return `${head}
+    <div class="card"><div class="step ${cleared ? 'done' : ''}"><b>${cleared ? '✓' : idx + 1}</b><h3>${esc(s.title)}</h3><span class="meta num why" style="margin-left:auto">Step ${idx + 1} of ${steps.length}</span></div>
+      <div class="prose">${prose(s.teach)}</div>${s.example ? `<span class="label">Example</span><div class="prose">${prose(s.example)}</div>` : ''}</div>
+    ${lessonExtras(t, q, s)}
+    <div class="card mission-card"><span class="label">Your mission</span><div class="prose">${prose(s.goal)}</div>
+      ${s.rows && !s.contains && !s.verify && !s.matchSql ? `<p class="why">The right answer has <b class="num">${s.rows}</b> row${s.rows > 1 ? 's' : ''}.</p>` : ''}
+      ${s.upload ? `<div class="upload"><label class="label" for="csv">Your CSV file</label><input type="file" id="csv" accept=".csv,text/csv">${sb.rawSample ? '<button id="b-sample" class="ghost">Use the sample file</button>' : ''}${SQLX.upload ? `<p class="why">Loaded <b>${esc(SQLX.upload.name)}</b>: <span class="num">${SQLX.upload.rows.length}</span> rows, <span class="num">${SQLX.upload.columns.length}</span> columns into <code>raw_results</code>.</p>` : ''}</div>` : ''}
+      ${schemaHtml(sb)}
+      <label class="label" for="sql">Your SQL <span style="text-transform:none;letter-spacing:0">(Ctrl + Enter runs it)</span></label>
+      <textarea id="sql" class="editor" spellcheck="false" autocapitalize="off" autocomplete="off" rows="${Math.max(5, (sx.draft || '').split('\n').length + 1)}">${esc(sx.draft)}</textarea>
+      <div class="acts"><button class="go" id="b-run" ${sx.loading ? 'disabled' : ''}>${sx.loading ? 'Loading data…' : 'Run'}</button>
+        ${hintsShown < s.hints.length ? `<button id="b-hint">Hint (${s.hints.length - hintsShown} left)</button>` : ''}
+        <button id="b-reveal" ${canReveal ? '' : 'disabled title="Unlocks after 2 tries or both hints"'}>Show answer</button>
+        ${s.starter ? '<button class="ghost" id="b-resetcode">Reset code</button>' : ''}
+        ${cleared || sx.passed ? `<button class="go" id="b-next">${idx + 1 < steps.length ? 'Next step →' : 'On to the quiz →'}</button>` : ''}</div>
+      ${s.hints.slice(0, hintsShown).map((h, i) => `<p class="hint-box"><b>Hint ${i + 1}:</b> ${prose(h).replace(/^<p>|<\/p>$/g, '')}</p>`).join('')}
+      ${sx.feedback ? `<p class="fb ${sx.feedback.ok ? 'pass' : 'fail'}">${esc(sx.feedback.msg)}</p>` : ''}
+      <div id="out">${sx.out || ''}</div></div>`;
+}
+
+// What the guide says on a step: reacts to a pass or fail, otherwise a tip for where you are.
+function stepLine(t, q, idx, s) {
+  const g = guideOf(t); if (!g) return ['', ''];
+  const L = g.lines, sx = S.sbx, fb = sx.feedback;
+  if (fb && sx.key === `${t.id}:${q.id}:${idx}`) {
+    if (fb.ok) return (S.combo || 0) >= 3 ? [`Combo x${S.combo}! ${pickLine(L.combo, S.combo)}`, 'combo'] : [pickLine(L.pass, idx), 'pass'];
+    return [pickLine(L.fail, (sx.fails || 0) + idx), 'fail'];
+  }
+  if (!s) return [q.completedOn ? L.done && !(t.quests || []).some(x => !x.completedOn) ? L.done : pickLine(L.pass, idx) : L.quiz, ''];
+  if (idx === 0 && q.boss) return [L.boss, ''];
+  return [pickLine(L.step, idx + (t.quests || []).indexOf(q) * 3), ''];
+}
+
+// A step done outside the page (GitHub, a desktop tool). Clears with a check question.
+function doStepCard(t, q, s, idx, cleared) {
+  const sx = S.sbx, c = s.check, last = idx + 1 >= q.steps.length;
+  const action = s.action === 'download' ? `<div class="upload"><button class="go" id="b-zip" ${sx.zipping ? 'disabled' : ''}>${sx.zipping ? 'Packing…' : 'Download my project'}</button><span class="why">${esc(shipSlug(t))}.zip</span>${sx.zipped ? `<p class="why">${esc(sx.zipped)}</p>` : ''}</div>`
+    : s.action === 'repoUrl' ? `<label class="label" for="repo">Your repo link</label><input id="repo" class="editor" style="resize:none" placeholder="https://github.com/your-name/${esc(shipSlug(t))}" value="${esc(sx.repo || t.repoUrl || '')}">` : '';
+  return `<div class="card"><div class="step ${cleared ? 'done' : ''}"><b>${cleared ? '✓' : idx + 1}</b><h3>${esc(s.title)}</h3><span class="meta num why" style="margin-left:auto">Step ${idx + 1} of ${q.steps.length}</span></div>
+      <div class="prose">${prose(linkify(s.teach))}</div></div>
+    ${lessonExtras(t, q, s)}
+    <div class="card mission-card"><span class="label">Your mission</span><div class="prose">${prose(linkify(s.goal))}</div>${action}
+      <fieldset><legend>Check: ${esc(c.q)}</legend>${c.options.map((o, i) => `<label class="opt ${sx.chk === i && sx.feedback ? (sx.feedback.ok ? 'right' : 'wrong') : ''}"><input type="radio" name="chk" id="chk-${i}" value="${i}" ${sx.chk === i ? 'checked' : ''}><span>${esc(o)}</span></label>`).join('')}</fieldset>
+      ${sx.feedback ? `<p class="fb ${sx.feedback.ok ? 'pass' : 'fail'}">${esc(sx.feedback.msg)}</p>` : ''}
+      <div class="acts">${cleared || sx.passed ? `<button class="go" id="b-next">${last ? 'On to the quiz →' : 'Next step →'}</button>` : `<button class="go" id="b-check">Check</button>`}</div></div>`;
+}
+// Go deeper (from the source) and Ask Claude (live follow-ups on this step), under every lesson.
+const ASK_CHIPS = ['Explain it another way', 'Give me a real example', 'What mistakes do people make here?', 'Why does this matter in your job?'];
+function lessonExtras(t, q, s) {
+  const deeper = s.deeper ? `<details class="card deeper"><summary>📚 Go deeper</summary><div class="prose">${prose(linkify(s.deeper))}</div>
+      ${q.source ? `<p class="why">Source: <a href="${esc(q.source.url)}" target="_blank" rel="noopener">${esc(q.source.title)}</a></p>` : ''}</details>` : '';
+  if (!S.sample) return deeper;
+  const a = S.ask.key === askKey(t, q, s) ? S.ask : { turns: [] };
+  const turns = a.turns.map(x => `<div class="turn ${x.role === 'user' ? 'you' : ''}"><span class="label">${x.role === 'user' ? 'You' : 'Claude'}</span><div class="prose">${prose(x.content)}</div></div>`).join('');
+  return `${deeper}<details class="card ask" ${a.turns.length || a.open ? 'open' : ''}><summary>💬 Ask Claude about this step</summary>
+      <p class="why">Follow-up questions on this lesson. It won't give away the answer unless you ask for it.</p>
+      ${turns}<div id="ask-live">${a.busy ? `<div class="turn"><span class="label">Claude</span><div class="prose">${a.live ? prose(a.live) : '<p class="why">Thinking…</p>'}</div></div>` : ''}</div>
+      ${a.err ? `<p class="fb fail">${esc(a.err)}</p>` : ''}
+      ${a.turns.length ? '' : `<div class="chips">${ASK_CHIPS.map((c, i) => `<button class="ghost" data-ask="${i}" ${a.busy ? 'disabled' : ''}>${esc(c)}</button>`).join('')}</div>`}
+      <label class="label" for="ask-in">Your question</label>
+      <textarea id="ask-in" class="editor" rows="2" placeholder="e.g. what's the difference between this and…">${esc(a.draft || '')}</textarea>
+      <div class="acts"><button class="go" id="b-ask" ${a.busy ? 'disabled' : ''}>Ask</button>${a.busy ? '<button class="ghost" id="b-askstop">Stop</button>' : ''}${a.turns.length && !a.busy ? '<button class="ghost" id="b-askclear">Clear</button>' : ''}</div></details>`;
+}
+const askKey = (t, q, s) => `${t.id}:${q.id}:${s.id}`;
+const ASK_ERR = { not_granted: 'Ask Claude needs your OK. Reload the page to be asked again.', rate_limited: 'Too many questions at once. Give it a minute.', prompt_too_large: 'That conversation got too long. Press Clear and ask again.', refused: 'Claude couldn\'t answer that one. Try rewording it.', session_expired: 'Your session expired. Reload the page.' };
+function askPrompt(t, q, s) {
+  const nm = playerName();
+  return `You are the tutor on ${nm ? nm + "'s" : "a learner's"} private Skill Tree learning page. They are a beginner-to-intermediate learner building skills for their role.
+
+Topic: ${t.title}
+Quest: ${q.title}
+Step: ${s.title}
+
+The lesson they just read:
+${s.teach}
+${s.deeper ? `\nThe go-deeper notes:\n${s.deeper}\n` : ''}
+Their mission for this step: ${s.goal}
+${q.source ? `Main source for this quest: ${q.source.title} (${q.source.url})` : ''}
+
+How to answer:
+- Plain British English, short sentences, no em dashes. Under 200 words unless they ask for more.
+- Teach properly: the why, a concrete example, the common mistake. Don't dumb it down, don't pad.
+- Don't give them the answer to their mission or check question unless they clearly ask for the answer. Nudge them towards it instead.
+- Stick to what's well established. If you're not sure, or it goes beyond this lesson, say so and point them to the source above.
+- Light markdown only: **bold**, \`code\`, code blocks, short lines starting with "- ".`;
+}
+async function askClaude(t, q, s, text) {
+  const key = askKey(t, q, s);
+  if (S.ask.key !== key) S.ask = { key, turns: [] };
+  const a = S.ask;
+  text = String(text || '').trim();
+  if (!text || a.busy || !S.sample) return;
+  const turns = [...a.turns, { role: 'user', content: text }].slice(-10);
+  const input = turns.map((x, i) => i === 0 ? { role: 'user', content: askPrompt(t, q, s) + '\n\nTheir question: ' + x.content } : x);
+  Object.assign(a, { turns, draft: '', busy: true, live: '', err: '', ctl: new AbortController() });
+  render();
+  const paint = () => { const el = $('#ask-live'); if (el && S.ask === a) el.innerHTML = `<div class="turn"><span class="label">Claude</span><div class="prose">${prose(a.live)}</div></div>`; };
+  try {
+    const { text: out } = await S.sample(input, { signal: a.ctl.signal, cache: false, onText: ({ text }) => { a.live = text; paint(); } });
+    a.turns.push({ role: 'assistant', content: out });
+  } catch (e) {
+    if (e?.text) a.turns.push({ role: 'assistant', content: e.text });
+    if (e?.code !== 'cancelled') a.err = ASK_ERR[e?.code] || 'Claude couldn\'t answer just now. Try again in a moment.';
+  }
+  a.busy = false; a.live = ''; a.ctl = null;
+  if (S.ask === a) render();
+}
+function bindAsk(t, q, s) {
+  if (!s || !S.sample) return;
+  const inp = $('#ask-in'), key = askKey(t, q, s);
+  const cur = () => { if (S.ask.key !== key) S.ask = { key, turns: [] }; return S.ask; };
+  const box = document.querySelector('details.ask');
+  if (box) box.ontoggle = () => { cur().open = box.open; };
+  if (inp) {
+    inp.oninput = () => { cur().draft = inp.value; };
+    inp.onkeydown = e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); askClaude(t, q, s, inp.value); } };
+  }
+  document.querySelectorAll('[data-ask]').forEach(b => b.onclick = () => askClaude(t, q, s, ASK_CHIPS[Number(b.dataset.ask)]));
+  const on = (id, fn) => { const b = $('#' + id); if (b) b.onclick = fn; };
+  on('b-ask', () => askClaude(t, q, s, inp?.value));
+  on('b-askstop', () => S.ask.ctl?.abort());
+  on('b-askclear', () => { S.ask = { key, turns: [], open: true }; render(); });
+}
+// A step answered by typing (a phrase, a word, a number). Accepts any listed answer, ignoring case, accents and punctuation.
+function inputStepCard(t, q, s, idx, cleared) {
+  const sx = S.sbx, hintsShown = sx.hints || 0, canReveal = sx.fails >= 2 || hintsShown >= (s.hints || []).length, last = idx + 1 >= q.steps.length;
+  return `<div class="card"><div class="step ${cleared ? 'done' : ''}"><b>${cleared ? '✓' : idx + 1}</b><h3>${esc(s.title)}</h3><span class="meta num why" style="margin-left:auto">Step ${idx + 1} of ${q.steps.length}</span></div>
+      <div class="prose">${prose(linkify(s.teach))}</div>${s.example ? `<span class="label">Example</span><div class="prose">${prose(s.example)}</div>` : ''}</div>
+    ${lessonExtras(t, q, s)}
+    <div class="card mission-card"><span class="label">Your mission</span><div class="prose">${prose(linkify(s.goal))}</div>
+      <label class="label" for="ans">${s.answerSql ? 'What your query returned' : 'Your answer'}</label><input id="ans" class="editor" style="resize:none" autocomplete="off" autocapitalize="off" spellcheck="false" value="${esc(sx.draft || '')}">
+      <div class="acts">${cleared || sx.passed ? `<button class="go" id="b-next">${last ? 'On to the quiz →' : 'Next step →'}</button>` : `<button class="go" id="b-check">Check</button>`}
+        ${(s.hints || []).length > hintsShown ? `<button id="b-hint">Hint (${s.hints.length - hintsShown} left)</button>` : ''}
+        <button id="b-reveal" ${canReveal ? '' : 'disabled title="Unlocks after 2 tries or both hints"'}>Show answer</button></div>
+      ${(s.hints || []).slice(0, hintsShown).map((h, i) => `<p class="hint-box"><b>Hint ${i + 1}:</b> ${prose(h).replace(/^<p>|<\/p>$/g, '')}</p>`).join('')}
+      ${sx.feedback ? `<p class="fb ${sx.feedback.ok ? 'pass' : 'fail'}">${esc(sx.feedback.msg)}</p>` : ''}
+      ${s.answerSql && (sx.revealed || cleared || sx.passed) ? `<span class="label">One way to write it</span><div class="prose">${prose('```\n' + s.answerSql + '\n```')}</div>` : ''}</div>`;
+}
+const normAns = v => String(v || '').normalize('NFD').replace(/\p{M}/gu, '').toLowerCase().replace(/[^\p{L}\p{N}\s]/gu, '').replace(/\s+/g, ' ').trim();
+function bindInput(t, q, s, idx) {
+  const sx = S.sbx, on = (id, fn) => { const b = $('#' + id); if (b) b.onclick = fn; };
+  const ans = $('#ans');
+  const check = () => {
+    const v = (ans ? ans.value : sx.draft) || ''; sx.draft = v;
+    if (!v.trim()) { sx.feedback = { ok: false, msg: 'Type an answer first.' }; render(); return; }
+    if ((s.accept || []).some(a => normAns(a) === normAns(v))) { sx.feedback = { ok: true, msg: s.why ? `Correct. ${s.why}` : 'Correct.' }; clearStep(t, q, idx); return; }
+    sx.fails = (sx.fails || 0) + 1; sx.feedback = { ok: false, msg: 'Not quite. Check the spelling and try again, or take a hint.' }; sfx.fail(); render();
+  };
+  if (ans) { ans.oninput = () => { sx.draft = ans.value; }; ans.onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); check(); } }; }
+  on('b-check', check);
+  on('b-hint', () => { sx.hints = (sx.hints || 0) + 1; sfx.flip(); render(); });
+  on('b-reveal', () => { sx.draft = (s.accept || [''])[0]; sx.revealed = true; sx.feedback = { ok: false, msg: s.answerSql ? 'There\'s the answer and the query below. Type the query into your SQL tool yourself and run it, then press Check. Steps cleared with the answer shown don\'t earn step XP.' : 'There\'s the answer. Read it, then press Check. Steps cleared with the answer shown don\'t earn step XP.' }; render(); });
+  on('b-next', () => { S.view.step = idx + 1; S.quiz = {}; render(); window.scrollTo(0, 0); });
+}
+
+// Plain URLs in step text become links (they open in a new tab).
+const linkify = txt => String(txt || '').replace(/(^|\s)(https:\/\/[^\s)]+?)([.,]?)(?=\s|$)/g, '$1[[$2]]$3');
+
+function schemaHtml(sb) {
+  const cols = SQLX.schema[sb.dataset];
+  if (!cols) return '';
+  return `<details class="schema"><summary>Tables you can use</summary>
+    <p><b>${esc(SQLX.data[sb.dataset]?.table || 'data')}</b>: ${cols.map(c => `<code>${esc(c)}</code>`).join(' ')}</p>
+    ${sb.setup ? `<p class="why">The setup adds more tables or views. The lesson names them.</p>` : ''}
+    ${SQLX.upload ? `<p><b>raw_results</b>: your uploaded CSV, ${SQLX.upload.columns.length} columns, all text. ${SQLX.upload.columns.slice(0, 6).map(c => `<code>${esc(c)}</code>`).join(' ')}${SQLX.upload.columns.length > 6 ? ' …' : ''}</p>` : ''}</details>`;
+}
+
+// Role topics, first open: offer the placement test before quest 1 (take it, or skip and start at quest 1).
+const needsPlacement = t => !!t.fromRole && !(t.quests || []).some(q => q.completedOn) && !t.placementDone && !t.placementSkipped;
+const placementPending = t => needsPlacement(t) && S.trials.some(x => x.stat === t.stat && x.level === placeLevel(t));
+function placementPrompt(t) {
+  if (!needsPlacement(t)) return '';
+  const st = S.stats.find(x => x.id === t.stat), lv = placeLevel(t), d = S.trials.find(x => x.stat === t.stat && x.level === lv);
+  if (!d) return '';
+  const cool = retryOn(st, lv), T = { placement: t.id }, lad = st?.ladder?.[lv - 1];
+  return `<div class="card place-card"><span class="label">Placement · before quest 1</span><h3>Find your real starting level</h3>
+      <p>A short test from the ${esc(lad?.name || 'Level ' + lv)} Rank Trial (${lv}/7): ${trialPick(T, d)} problems, ${trialPass(T, d)} to pass, about ${trialMinutes(T, d)} minutes. Pass and you try the next level, until you miss. Every level you pass is real mastery and skips the quests it covers.</p>
+      <p class="why">New to this? Skip it and start at quest 1. You can take the placement later from this page.</p>
+      <div class="acts">${cool ? `<button disabled>Retry ${esc(dayName(cool))}</button>` : `<button class="go" data-place="${esc(t.stat)}:${lv}">Take the placement</button>`}<button class="ghost" id="b-placeskip">Skip, start at quest 1</button></div></div>`;
+}
+// Mission, Field Guide, placement and communities on the topic page (ideas from mattpocock/skills `teach`).
+function topicExtras(t) {
+  const m = t.mission, st = S.stats.find(x => x.id === t.stat), mastery = st?.mastery || 0;
+  const placeLv = t.fromRole ? placeLevel(t) : mastery + 1, hasTrial = S.trials.some(x => x.stat === t.stat && x.level === placeLv);
+  const covers = (t.placement || {})[placeLv] || [], canPlace = !needsPlacement(t) && hasTrial && ((t.placement || {})[placeLv] || t.fromRole);
+  const cool = retryOn(st, placeLv), anyStarted = (t.quests || []).some(q => q.completedOn || (q.stepsDone || 0) > 0);
+  return `${m ? `<div class="card why-card"><span class="label">Why you're doing this</span><p>${esc(m.why)}</p>
+      <span class="label">Success looks like</span><ul>${(m.success || []).map(x => `<li>${esc(x)}</li>`).join('')}</ul></div>` : ''}
+    <div class="acts">${t.reference || t.glossary ? `<button id="b-guide">📖 Field Guide</button>` : ''}</div>
+    ${canPlace ? `<div class="card place-card"><span class="label">Already know some of this?</span>
+      <p>Take the placement. It's the ${esc(st?.ladder?.[placeLv - 1]?.name || '')} Rank Trial. ${covers.length ? `Pass and you skip ${covers.map(id => `"${esc((t.quests.find(q => q.id === id) || {}).title || id)}"`).join(' and ')}, then try the next level.` : 'Pass and it counts as real mastery, then try the next level.'} Skip it and start at quest 1.</p>
+      ${cool ? `<button disabled>Retry ${esc(dayName(cool))}</button>` : `<button class="go" id="b-place" data-place="${esc(t.stat)}:${placeLv}">${t.placementDone ? 'Retake the placement' : 'Take the placement'}</button>`}${anyStarted ? '' : ''}</div>` : ''}
+    ${(t.communities || []).length ? `<details class="card comm"><summary><b>Ask real people</b> <span class="why">communities for questions only practitioners can answer</span></summary>
+      <ul>${t.communities.map(c => `<li><a href="${esc(c.url)}" target="_blank" rel="noopener">${esc(c.name)}</a>: ${esc(c.why)}</li>`).join('')}</ul></details>` : ''}`;
+}
+// The step whose lesson best matches the card (word overlap), or the quest's explain text.
+function refresherLesson(c) {
+  const t = S.topics.find(x => x.id === c.topic), q = (t?.quests || []).find(x => x.id === c.quest);
+  if (!q) return { t, q };
+  const words = new Set(`${c.front} ${c.back}`.toLowerCase().match(/[a-z0-9_]{4,}/g) || []);
+  const score = x => ((x || '').toLowerCase().match(/[a-z0-9_]{4,}/g) || []).filter(w => words.has(w)).length;
+  const step = (q.steps || []).filter(x => x.teach).sort((a, b) => score(b.title + ' ' + b.teach) - score(a.title + ' ' + a.teach))[0];
+  return { t, q, title: step?.title || q.title, body: step ? step.teach : [q.explain, q.example].filter(Boolean).join('\n\n') };
+}
+function refresherView() {
+  const c = S.cards.find(x => x.id === S.view.card);
+  if (!c) return `<button class="back ghost" id="b-home">← Skill Tree</button><div class="empty"><b>Nothing to refresh.</b></div>`;
+  const { t, q, title, body } = refresherLesson(c);
+  return `<button class="back ghost" id="b-home">← Skill Tree</button>
+    <div><span class="label">Refresher · ${esc(t?.title || '')}</span><h1 style="font-size:1.5rem">${esc(title || 'Quick refresher')}</h1>
+    <p class="why">You forgot this card${(c.lapses || 0) > 1 ? ` ${c.lapses} times` : ''}. Read the lesson again, then it comes back for review tomorrow.</p></div>
+    <div class="card"><span class="label">The card</span><div class="prose">${prose(c.front)}</div><span class="label">Answer</span><div class="prose">${prose(c.back)}</div></div>
+    ${body ? `<div class="card"><span class="label">The lesson${q ? ` · from ${esc(q.title)}` : ''}</span><div class="prose">${prose(body)}</div></div>` : ''}
+    <div class="acts">${q ? `<button class="ghost" data-quest="${esc(q.id)}" data-qtopic="${esc(t.id)}">Open the full quest</button>` : ''}<button class="go" id="b-refreshed">Got it now</button></div>`;
+}
+function guideView(t) {
+  const glo = t.glossary || [], done = id => !!(t.quests || []).find(q => q.id === id)?.completedOn;
+  const open = glo.filter(g => done(g.quest)), locked = glo.length - open.length;
+  return `<button class="back ghost" id="b-topic">← ${esc(t.title)}</button>
+    <div><span class="label">Field Guide</span><h1 style="font-size:1.6rem">${esc(t.title)}</h1><p class="why">The short version of everything in this topic. Come back here when you're stuck.</p></div>
+    ${(t.reference || []).map(r => `<section class="card guide"><h3>${esc(r.title)}</h3><div class="prose">${prose(r.body.replace(/^- /gm, '• '))}</div></section>`).join('')}
+    ${glo.length ? `<section class="card guide"><h3>Glossary</h3>
+      ${open.length ? `<dl>${open.map(g => `<dt>${esc(g.term)}</dt><dd>${esc(g.def)}${(g.avoid || []).length ? ` <span class="why">Not: ${g.avoid.map(esc).join(', ')}</span>` : ''}</dd>`).join('')}</dl>` : ''}
+      ${locked ? `<p class="why">${locked} more term${locked > 1 ? 's' : ''} unlock as you clear quests.</p>` : ''}</section>` : ''}`;
+}
+function questFooter(q) {
+  return `<div class="qfoot">${q.win ? `<p><span class="label">The win</span><br>${esc(q.win)}</p>` : ''}
+    ${q.source ? `<p><span class="label">Go deeper</span><br><a href="${esc(q.source.url)}" target="_blank" rel="noopener">${esc(q.source.title)}</a></p>` : ''}
+    <p class="why">Stuck or curious? Open 💬 Ask Claude on any step. It's your teacher too.</p></div>`;
+}
+
+function questView(t, q) {
+  if (q.steps) return stepQuestView(t, q);
+  const quiz = q.quiz || [], st = S.quiz, passed = (q.quizBest || 0) >= passMark(quiz.length) && quiz.length;
+  const quizHtml = quiz.map((item, qi) => {
+    const pick = st.answers?.[qi];
+    return `<fieldset><legend>${qi + 1}. ${esc(item.q)}</legend>${(item.options || []).map((o, oi) => {
+      const cls = st.checked ? (oi === item.answer ? 'right' : oi === pick ? 'wrong' : '') : '';
+      return `<label class="opt ${cls}"><input type="radio" name="q${qi}" id="q${qi}-${oi}" value="${oi}" ${pick === oi ? 'checked' : ''} ${st.checked ? 'disabled' : ''}><span>${esc(o)}</span></label>`;
+    }).join('')}${st.checked && item.why ? `<p class="why">${esc(item.why)}</p>` : ''}</fieldset>`;
+  }).join('');
+  const pm = passMark(quiz.length);
+  return `<button class="back ghost" id="b-topic">← ${esc(t.title)}</button>
+    <div><span class="label">${esc(t.title)}</span><h1 style="font-size:1.5rem">${esc(q.title)}</h1></div>
+    <div class="card"><div class="step"><b>1</b><h3>Learn it</h3></div><div class="prose">${prose(q.explain)}</div>
+      ${q.example ? `<span class="label">Example</span><div class="prose">${prose(q.example)}</div>` : ''}</div>
+    <div class="card ${q.taskDone ? 'done' : ''}"><div class="step ${q.taskDone ? 'done' : ''}"><b>${q.taskDone ? '✓' : '2'}</b><h3>Do it</h3></div><div class="prose">${prose(q.task)}</div>
+      <div class="acts"><button id="b-task" ${q.taskDone ? 'disabled' : ''}>${q.taskDone ? 'Done ✓' : "I've done this"}</button></div></div>
+    <div class="card ${passed ? 'done' : ''}"><div class="step ${passed ? 'done' : ''}"><b>${passed ? '✓' : '3'}</b><h3>Prove it</h3><span class="meta num why" style="margin-left:auto">${quiz.length ? `${pm}/${quiz.length} to pass · 3/3 flawless +${XP.flawless}` : ''}</span></div>
+      ${quiz.length ? `<form id="quiz" style="display:flex;flex-direction:column;gap:14px">${quizHtml}
+        ${st.checked ? `<p class="result ${st.score >= pm ? 'pass' : 'fail'}">${st.score}/${quiz.length}. ${st.score === quiz.length ? 'Flawless.' : st.score >= pm ? 'Passed.' : `Need ${pm} to pass. Have another go.`}</p>` : ''}
+        <div class="acts">${st.checked ? `<button type="button" id="b-retry">Try again</button>` : `<button class="go" type="submit">Check answers</button>`}</div></form>`
+        : '<p class="why">No quiz on this quest.</p>'}
+      ${q.completedOn ? `<p class="result pass">Quest cleared ${esc(q.completedOn)}.</p>` : ''}</div>`;
+}
+
+function reviewView() {
+  const due = mixedDue(), c = due[0];
+  if (!c) return `<button class="back ghost" id="b-home">← Skill Tree</button><div class="empty"><b>All caught up.</b><span>No cards due. They come back on a growing gap: 1, 3, 7, 14, 30, 60 days.</span></div>`;
+  const flipped = S.view.flipped === c.id;
+  return `<button class="back ghost" id="b-home">← Skill Tree</button>
+    <div class="row"><span class="label">${due.length} due · ${esc(S.stats.find(s => s.id === c.stat)?.name || '')}</span><span class="num">+${XP.card} XP each</span></div>
+    <div class="fc ${flipped ? 'flipped' : ''}"><div class="fc-in"><div class="face a"><div class="prose">${prose(c.front)}</div></div><div class="face b"><div class="prose">${prose(c.back)}</div></div></div></div>
+    <div class="acts">${flipped ? `<button id="b-again">Again (1 day)</button><button class="go" id="b-got">Got it (${GAPS[Math.min((c.gapIdx || 0) + 1, GAPS.length - 1)]} days)</button>` : `<button class="go" id="b-flip">Show answer</button>`}</div>`;
+}
+
+// ---------- character creator: first open (no look saved yet) and the HUD ⚙ button ----------
+const playerName = () => String(S.player.name || '').trim().slice(0, 20);
+const needsLook = () => S.loaded && !!S.db && !S.player.look;
+function creatorView() {
+  const first = !S.player.look;
+  const M = S.make || (S.make = { name: playerName(), look: cleanLook(S.player.look), gear: cleanGear(S.player.gear), rank: rankOf(S.player.xp || 0).idx });
+  const chips = k => LOOKS[k].map(v => {
+    const on = M.look[k] === v, attrs = `type="button" data-look="${k}" data-v="${esc(v)}" aria-pressed="${on}"`;
+    return v[0] === '#' ? `<button ${attrs} class="sw${on ? ' on' : ''}" style="background:${esc(v)}" aria-label="${esc(LOOK_LABELS[k])} ${esc(v)}" title="${esc(v)}"></button>`
+      : `<button ${attrs} class="${on ? 'on' : ''}">${esc(v)}</button>`;
+  }).join('');
+  return `${first ? '' : '<button class="back ghost" id="b-home">← Skill Tree</button>'}
+    <div><span class="label">${first ? 'New run' : 'Settings'}</span><h1 style="font-size:1.6rem">${first ? 'Make your character' : 'Your character'}</h1>
+      <p class="hint">${first ? 'Pick a name and a look. Change them any time from the ⚙ button. Headband, cape and crown come from your rank: earned, never picked. Gear unlocks at Champion rank.' : 'Change your name, look or gear. Rank gear stays earned.'}</p></div>
+    <form class="card creator" id="creator" novalidate>
+      <div class="stage"><div class="cr-fig"><canvas id="cr-avatar" width="14" height="20" aria-label="Your character preview"></canvas><canvas id="cr-pet" class="pet" width="6" height="6" aria-hidden="true" hidden></canvas></div><b id="cr-nm">${esc(M.name || 'Your name')}</b><span class="label">${esc(RANKS[M.rank][1])}</span></div>
+      <div class="cr-opts">
+        <div class="cr-row"><label class="label" for="cr-name">Name</label><input id="cr-name" class="editor" style="resize:none" maxlength="20" autocomplete="off" spellcheck="false" placeholder="What should the page call you?" value="${esc(M.name)}"></div>
+        ${Object.keys(LOOKS).map(k => `<div class="cr-row"><span class="label">${esc(LOOK_LABELS[k])}</span><div class="chips" role="group" aria-label="${esc(LOOK_LABELS[k])}">${chips(k)}</div></div>`).join('')}
+        <div class="cr-row"><span class="label">Preview rank gear (earned, not picked)</span><div class="chips" role="group" aria-label="Preview rank gear">${RANKS.map((r, i) => `<button type="button" data-gear="${i}" aria-pressed="${M.rank === i}" class="${M.rank === i ? 'on' : ''}">${esc(r[1])}</button>`).join('')}</div></div>
+        ${gearPicker(M)}
+        <div class="acts"><button class="go" type="submit">${first ? 'Start my run' : 'Save'}</button>${first ? '' : '<button type="button" class="ghost" id="b-crcancel">Cancel</button>'}</div>
+      </div></form>`;
+}
+function bindCreator() {
+  const M = S.make, form = $('#creator'); if (!M || !form) return;
+  drawAvatar(rankOf(RANKS[M.rank][0]), $('#cr-avatar'), M.look, M.gear); drawPet($('#cr-pet'), M.gear);
+  bindGearPicker(M, render);
+  const inp = $('#cr-name');
+  if (inp) inp.oninput = () => { M.name = inp.value.slice(0, 20); $('#cr-nm').textContent = M.name.trim() || 'Your name'; };
+  const refocus = sel => { const b = $(sel); if (b) b.focus(); };
+  document.querySelectorAll('[data-look]').forEach(b => b.onclick = () => {
+    const k = b.dataset.look, v = b.dataset.v; M.look = cleanLook({ ...M.look, [k]: v }); sfx.flip(); render();
+    refocus(`[data-look="${k}"][data-v="${v}"]`);
+  });
+  document.querySelectorAll('[data-gear]').forEach(b => b.onclick = () => { M.rank = Number(b.dataset.gear); sfx.flip(); render(); refocus(`[data-gear="${M.rank}"]`); });
+  const cancel = $('#b-crcancel'); if (cancel) cancel.onclick = () => go({ name: 'home' });
+  form.onsubmit = e => { e.preventDefault(); saveLook(); };
+}
+function saveLook() {
+  const M = S.make, name = String(M?.name || '').trim().slice(0, 20);
+  if (!name) { toast('Pick a name first.'); const i = $('#cr-name'); if (i) i.focus(); return; }
+  const look = cleanLook(M.look), gear = cleanGear(M.gear), first = !S.player.look;
+  guarded(async () => {
+    await write('player/me', { name, look, gear }, !S.player.exists);
+    Object.assign(S.player, { name, look, gear, exists: true }); S.make = null;
+    sfx.level(); toast(first ? `Welcome, ${name}. Your run starts now.` : 'Character saved.');
+    go({ name: 'home' });
+  });
+}
+
+function render() {
+  renderHud();
+  const v = S.view, el = $('#view');
+  const t = v.topic && S.topics.find(x => x.id === v.topic);
+  const q = t && v.quest && (t.quests || []).find(x => x.id === v.quest);
+  const making = needsLook() || v.name === 'creator';
+  el.innerHTML = making ? creatorView() : v.name === 'quest' && q ? questView(t, q) + questFooter(q) : v.name === 'guide' && t ? guideView(t) : v.name === 'topic' && t ? topicView(t) : v.name === 'review' ? reviewView() : v.name === 'refresher' ? refresherView() : v.name === 'trophies' ? trophiesView() : v.name === 'trial' ? trialView() : homeView();
+  if (making) { bind(null, null); bindCreator(); return; }
+  bind(t, q);
+  checkGearUnlocks();
+}
+
+function bind(t, q) {
+  const on = (id, fn) => { const b = $('#' + id); if (b) b.onclick = fn; };
+  on('b-home', () => go({ name: 'home' }));
+  on('b-topic', () => go({ name: 'topic', topic: t.id }));
+  on('b-review', () => go({ name: 'review' }));
+  on('b-hall', () => go({ name: 'trophies' }));
+  on('b-guide', () => go({ name: 'guide', topic: t.id }));
+  document.querySelectorAll('[data-place]').forEach(pl => pl.onclick = () => { const [stat, lv] = pl.dataset.place.split(':'); S.trial = { stat, level: Number(lv), phase: 'intro', placement: t.id }; go({ name: 'trial' }); });
+  on('b-placeskip', () => guarded(async () => {
+    await write('topics/' + t.id, { placementSkipped: today() }); t.placementSkipped = today();
+    sfx.flip(); toast('Skipped. Quest 1 is ready when you are.'); render();
+  }));
+  document.querySelectorAll('[data-trial]').forEach(b => b.onclick = () => { const [stat, lv] = b.dataset.trial.split(':'); S.trial = { stat, level: Number(lv), phase: 'intro' }; go({ name: 'trial' }); });
+  if (S.view.name === 'trial') { bindTrial(); on('b-tdata', downloadTrialData); }
+  document.querySelectorAll('[data-levelup]').forEach(b => b.onclick = () => { S.lvConfirm = b.dataset.levelup; sfx.flip(); render(); });
+  document.querySelectorAll('[data-lvno]').forEach(b => b.onclick = () => { S.lvConfirm = null; render(); });
+  document.querySelectorAll('[data-lvyes]').forEach(b => b.onclick = () => guarded(async () => {
+    const st = S.stats.find(x => x.id === b.dataset.lvyes); if (!st) return;
+    const lv = (st.mastery || 0) + 1, nxt = st.ladder?.[lv - 1] || {};
+    await write('requests/r' + Date.now(), { kind: 'levelup', stat: st.id, level: lv, text: `Level-up quest for ${st.name}: ${nxt.quest} (${nxt.name}, ${lv}/7)`,
+      addTo: 'new', status: 'queued', askedOn: today() }, true);
+    S.lvConfirm = null; sfx.flip(); toast('Queued. Claude researches and builds it next time you run /learn.'); render();
+  }));
+  document.querySelectorAll('[data-lvundo]').forEach(b => b.onclick = () => guarded(async () => {
+    await S.db.doc('requests/' + b.dataset.lvundo).delete(); toast('Level-up quest cancelled.'); render();
+  }));
+  if (S.view.name === 'home') bindBoard();
+  on('b-resume', () => { const n = nextQuest(); if (n) go({ name: 'quest', topic: n.topic.id, quest: n.quest.id }); });
+  document.querySelectorAll('[data-resume]').forEach(b => b.onclick = () => {
+    const n = questLine().find(x => x.topic.id === b.dataset.resume); if (!n) return;
+    // A fresh role topic opens on its topic page first, so the placement card shows before quest 1.
+    if (placementPending(n.topic)) { go({ name: 'topic', topic: n.topic.id }); return; }
+    go({ name: 'quest', topic: n.topic.id, quest: n.quest.id });
+  });
+  document.querySelectorAll('[data-main]').forEach(b => b.onclick = () => guarded(async () => {
+    const id = b.dataset.main; await write('player/me', { activeTopic: id }, !S.player.exists); S.player.activeTopic = id; S.player.exists = true;
+    sfx.flip(); toast(`${S.topics.find(t => t.id === id)?.title || 'That'} is your main quest now.`); render();
+  }));
+  // Changed your mind on a topic you accepted but haven't started: it goes back on the Quest Board.
+  document.querySelectorAll('[data-giveback]').forEach(b => b.onclick = () => guarded(async () => {
+    const tp = S.topics.find(x => x.id === b.dataset.giveback); if (!tp || !untouched(tp)) return;
+    await write('topics/' + tp.id, { status: 'offered', acceptedOn: null }); tp.status = 'offered'; delete tp.acceptedOn;
+    if (S.player.activeTopic === tp.id) { const nx = S.topics.find(x => isActive(x) && x !== tp); await write('player/me', { activeTopic: nx ? nx.id : null }); S.player.activeTopic = nx ? nx.id : null; }
+    sfx.flip(); toast(`${guideOf(tp)?.name || 'It'} is back on the Quest Board.`); render();
+  }));
+  paintGuides();
+  on('b-mute', () => { sfx.toggle(); renderHud(); if (!sfx.muted()) sfx.card(); });
+  on('b-look', () => { if (S.trial?.phase === 'run') return; go({ name: 'creator' }); });
+  document.querySelectorAll('[data-topic]').forEach(b => b.onclick = () => go({ name: 'topic', topic: b.dataset.topic }));
+  document.querySelectorAll('[data-quest]').forEach(b => b.onclick = () => go({ name: 'quest', topic: t.id, quest: b.dataset.quest }));
+  on('b-flip', () => { S.view.flipped = mixedDue()[0]?.id || null; sfx.flip(); render(); });
+  on('b-got', () => answerCard(true));
+  document.querySelectorAll('[data-refresh]').forEach(b => b.onclick = () => go({ name: 'refresher', card: b.dataset.refresh }));
+  document.querySelectorAll('[data-qtopic]').forEach(b => b.onclick = () => go({ name: 'quest', topic: b.dataset.qtopic, quest: b.dataset.quest }));
+  on('b-refreshed', () => guarded(async () => {
+    const c = S.cards.find(x => x.id === S.view.card); if (!c) return;
+    await write('cards/' + c.id, { remind: false }); c.remind = false;
+    const left = S.cards.find(x => x.remind);
+    toast(left ? 'Done. Next refresher is in your Quest Log.' : 'Done. It comes back for review tomorrow.');
+    go({ name: 'home' });
+  }));
+  on('b-again', () => answerCard(false));
+  on('b-task', () => guarded(() => applyQuest(t, q, { taskDone: true })));
+  on('b-retry', () => { S.quiz = {}; render(); });
+  const form = $('#quiz');
+  if (form) form.onsubmit = e => { e.preventDefault(); checkQuiz(t, q, form); };
+  if (q && q.steps) bindSteps(t, q);
+}
+
+// ---------- SQL sandbox (sql.js, pure JS build) ----------
+const SQLX = { SQL: null, data: {}, schema: {}, ans: {}, expected: {}, samples: {} };
+function loadScript(src) {
+  return new Promise((ok, no) => { const s = document.createElement('script'); s.src = src; s.onload = ok; s.onerror = () => no(new Error('script')); document.head.appendChild(s); });
+}
+async function sqlEngine() {
+  if (SQLX.SQL) return SQLX.SQL;
+  if (!window.initSqlJs) await loadScript('https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.3/sql-asm.js');
+  SQLX.SQL = await window.initSqlJs();
+  return SQLX.SQL;
+}
+async function dataset(path) {
+  if (!SQLX.data[path]) {
+    const r = await fetch(path); if (!r.ok) throw new Error('data');
+    SQLX.data[path] = await r.json(); SQLX.schema[path] = SQLX.data[path].columns;
+  }
+  return SQLX.data[path];
+}
+async function freshDb(sb) {
+  const SQL = await sqlEngine(), d = await dataset(sb.dataset), db = new SQL.Database();
+  db.run(`CREATE TABLE ${d.table} (${d.columns.map(c => c === 'id' ? 'id INTEGER PRIMARY KEY' : c).join(', ')})`);
+  const ins = db.prepare(`INSERT INTO ${d.table} VALUES (${d.columns.map(() => '?').join(',')})`);
+  db.run('BEGIN'); for (const row of d.rows) ins.run(row); db.run('COMMIT'); ins.free();
+  if (sb.setup) db.exec(sb.setup);
+  if (SQLX.upload) loadRaw(db);
+  return db;
+}
+const lastResult = res => res.length ? res[res.length - 1] : null;
+const norm = v => v === null || v === undefined ? '∅' : typeof v === 'number' ? String(Math.round(v * 1e4) / 1e4) : String(v);
+// Passes if the learner's result holds the answer's columns (any names, any column order, extras allowed) with the same rows.
+function compare(user, exp, ordered) {
+  if (!user) return { ok: false, msg: 'That ran but returned no rows. The answer has rows, so check your WHERE.' };
+  if (user.values.length !== exp.values.length) {
+    const more = user.values.length > exp.values.length;
+    return { ok: false, msg: `You got ${user.values.length} row${user.values.length === 1 ? '' : 's'}, the answer has ${exp.values.length}. ${more ? 'Too many: check your WHERE, brackets or LIMIT.' : 'Too few: check your WHERE isn\'t too strict, or your LIMIT.'}` };
+  }
+  const colVec = (r, j) => r.values.map(row => norm(row[j]));
+  const key = (arr, ord) => (ord ? arr : arr.slice().sort()).join('\u0001');
+  const used = new Set(), map = [];
+  for (let j = 0; j < exp.columns.length; j++) {
+    const want = key(colVec(exp, j), ordered);
+    const k = user.columns.findIndex((_, i) => !used.has(i) && key(colVec(user, i), ordered) === want);
+    if (k < 0) return { ok: false, msg: `Right number of rows, but the "${exp.columns[j]}" column is missing or its values are off. Check the column list and any maths.` };
+    used.add(k); map.push(k);
+  }
+  const tuples = r => r.values.map(row => map.map(k => norm(row[k])).join('\u0002'));
+  const eTuples = exp.values.map(row => exp.columns.map((_, j) => norm(row[j])).join('\u0002'));
+  if (key(tuples(user), ordered) !== key(eTuples, ordered)) return { ok: false, msg: ordered ? 'Right values, wrong order. Check your ORDER BY.' : 'The columns are right but the rows don\'t line up. Check your WHERE and GROUP BY.' };
+  return { ok: true, msg: user.columns.length > exp.columns.length ? 'Correct. (You have extra columns, which is fine.)' : 'Correct.' };
+}
+function tableHtml(r) {
+  if (!r) return '<p class="why">Ran OK. No rows returned.</p>';
+  const shown = r.values.slice(0, 50);
+  return `<div class="results"><table><thead><tr>${r.columns.map(c => `<th>${esc(c)}</th>`).join('')}</tr></thead><tbody>${shown.map(row => `<tr>${row.map(v => `<td>${v === null ? '<i>null</i>' : esc(v)}</td>`).join('')}</tr>`).join('')}</tbody></table></div>
+    <p class="why num">${r.values.length} row${r.values.length === 1 ? '' : 's'}${r.values.length > 50 ? ', first 50 shown' : ''}</p>`;
+}
+function friendlyError(msg, cols) {
+  const m = String(msg);
+  if (/no such column: (\S+)/.test(m)) return `There's no column called ${RegExp.$1}. Check the spelling (use underscores, all lower case). Open "Tables you can use" to see the names.`;
+  if (/no such table: (\S+)/.test(m)) return `There's no table called ${RegExp.$1} yet. Check the spelling. If an earlier step makes it, go back one step and press Run there, then come back.`;
+  if (/near "(.*?)": syntax error/.test(m)) return `SQL got confused near "${RegExp.$1}". Check for a missing comma, a missing quote, or a keyword in the wrong order.`;
+  if (/near ";"|VALUES/.test(m) && /syntax error/.test(m)) return 'Check your rows: each one in (brackets), a comma between rows, and a ; only after the last row.';
+  if (/incomplete input/.test(m)) return 'The query stops halfway. Check every bracket and quote is closed, and the CASE has an END.';
+  if (/(table|index) (\S+) already exists/.test(m)) return `${RegExp.$2} is already there: you made it on an earlier run in this quest. To start it again, put DROP ${RegExp.$1.toUpperCase()} IF EXISTS ${RegExp.$2}; on the first line.`;
+  if (/misuse of aggregate/.test(m)) return 'An aggregate (SUM, COUNT, AVG) is in the wrong place. Filters on them go in HAVING, not WHERE.';
+  return m;
+}
+const draftKey = (t, q, s) => `st-draft:${t.id}:${q.id}:${s.id}`;
+function getDraft(t, q, s) { try { return localStorage.getItem(draftKey(t, q, s)); } catch { return null; } }
+function setDraft(t, q, s, v) { try { localStorage.setItem(draftKey(t, q, s), v); } catch (e) { /* ignore */ } }
+
+// CSV upload: parse, keep in memory, load as raw_results (all text, like a real import).
+function parseCsv(text) {
+  text = text.replace(/^﻿/, '');
+  const rows = []; let row = [], cell = '', q = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (q) { if (c === '"') { if (text[i + 1] === '"') { cell += '"'; i++; } else q = false; } else cell += c; }
+    else if (c === '"') q = true;
+    else if (c === ',') { row.push(cell); cell = ''; }
+    else if (c === '\n' || c === '\r') { if (c === '\r' && text[i + 1] === '\n') i++; row.push(cell); cell = ''; if (row.some(x => x !== '')) rows.push(row); row = []; }
+    else cell += c;
+  }
+  if (cell || row.length) { row.push(cell); if (row.some(x => x !== '')) rows.push(row); }
+  const columns = rows.shift() || [];
+  return { columns, rows: rows.map(r => columns.map((_, i) => r[i] ?? '')) };
+}
+// The topic's own sample CSV (sandbox.rawSample, published with the page). build_pack.py loads the same file into raw_results.
+async function sampleCsv(sb) {
+  const path = sb?.rawSample; if (!path) throw new Error('no sample');
+  if (!SQLX.samples[path]) { const r = await fetch(path); if (!r.ok) throw new Error('data'); SQLX.samples[path] = parseCsv(await r.text()); }
+  return SQLX.samples[path];
+}
+const sampleName = sb => 'sample ' + String(sb?.rawSample || '').split('/').pop();
+function loadRaw(db) {
+  const u = SQLX.upload, qi = c => '"' + String(c).replace(/"/g, '""') + '"';
+  db.run('DROP TABLE IF EXISTS raw_results');
+  db.run(`CREATE TABLE raw_results (${u.columns.map(qi).join(', ')})`);
+  const ins = db.prepare(`INSERT INTO raw_results VALUES (${u.columns.map(() => '?').join(',')})`);
+  db.run('BEGIN'); for (const r of u.rows) ins.run(r); db.run('COMMIT'); ins.free();
+}
+function useUpload(name, parsed, raw) {
+  if (!parsed.columns.length || !parsed.rows.length) { S.sbx.feedback = { ok: false, msg: 'That file looks empty. Pick the CSV the lesson linked.' }; render(); return; }
+  SQLX.upload = { name, ...parsed };
+  if (raw && raw.length < 3e6) { try { localStorage.setItem('st-upload', JSON.stringify({ name, text: raw })); } catch (e) { /* storage full or blocked */ } }
+  if (S.sbx.db) loadRaw(S.sbx.db);
+  sfx.card();
+  S.sbx.feedback = { ok: true, msg: `Loaded ${parsed.rows.length} rows into raw_results. Now press Run.` };
+  render();
+}
+
+// Rebuild tables from earlier steps of a keepDb quest (after a reload or a new visit), using the SQL that passed.
+function replaySteps(t, q, idx, db) {
+  for (let i = 0; i < Math.min(idx, q.stepsDone || 0); i++) {
+    const st = q.steps[i];
+    const smp = SQLX.samples[t.sandbox?.rawSample];
+    if (st.upload && !SQLX.upload && smp) { SQLX.upload = { name: sampleName(t.sandbox), ...smp }; loadRaw(db); }
+    const sql = (q.solved || {})[st.id] || st.answer;
+    if (!sql) continue;
+    for (const stmt of sql.split(';').map(x => x.trim()).filter(Boolean)) {
+      if (/^select|^with|^explain/i.test(stmt)) continue;
+      try { db.exec(stmt); } catch (e) { /* already there or not needed */ }
+    }
+  }
+}
+function restoreUpload() {
+  try {
+    const saved = JSON.parse(localStorage.getItem('st-upload') || 'null');
+    if (saved && saved.text) { const parsed = parseCsv(saved.text); if (parsed.columns.length && parsed.rows.length) SQLX.upload = { name: saved.name, ...parsed }; }
+  } catch (e) { /* no saved upload */ }
+}
+
+// Load a fresh database for the step being shown (so indexes and mistakes never leak between steps).
+async function prepareStep(t, q) {
+  const idx = Math.min(S.view.step ?? (q.stepsDone || 0), q.steps.length), s = q.steps[idx];
+  const key = `${t.id}:${q.id}:${idx}`;
+  if (S.sbx.key === key) return;
+  S.sbx = { key, draft: s ? (getDraft(t, q, s) ?? s.starter ?? '') : '', fails: 0, hints: 0, out: '', feedback: null, loading: !!s, passed: false };
+  if (!s) return;
+  if (s.kind === 'do' || s.kind === 'input') { S.sbx.loading = false; return; }
+  const dbKey = q.keepDb ? `${t.id}:${q.id}` : key;
+  try {
+    if (!t.sandbox) throw new Error('This step needs a practice sandbox the topic doesn\'t have.');
+    if (!SQLX.user || SQLX.user.key !== dbKey) {
+      if (!SQLX.upload) restoreUpload();
+      // Replaying a past upload step with no saved upload: use the topic's sample, like build_pack does.
+      if (!SQLX.upload && q.keepDb && t.sandbox.rawSample && q.steps.slice(0, idx).some(x => x.upload)) { try { await sampleCsv(t.sandbox); } catch (e) { /* replay skips it */ } }
+      const db = await freshDb(t.sandbox);
+      if (S.sbx.key !== key) { db.close(); return; }
+      if (SQLX.user) SQLX.user.db.close();
+      SQLX.user = { key: dbKey, db };
+      if (q.keepDb) replaySteps(t, q, idx, db);
+    }
+    S.sbx.db = SQLX.user.db; S.sbx.loading = false;
+    if (!s.contains && !s.verify && !s.matchSql && !SQLX.expected[key]) {
+      SQLX.ans[t.id] = SQLX.ans[t.id] || await freshDb(t.sandbox);
+      SQLX.expected[key] = lastResult(SQLX.ans[t.id].exec(s.answer));
+    }
+  } catch (e) {
+    console.error(e); S.sbx.loading = false;
+    S.sbx.feedback = { ok: false, msg: 'Couldn\'t load the practice data. Check your connection and reopen the quest.' };
+  }
+  if (S.view.name === 'quest') render();
+}
+
+function bindSteps(t, q) {
+  document.querySelectorAll('[data-step]').forEach(b => b.onclick = () => { S.view.step = Number(b.dataset.step); S.quiz = {}; render(); });
+  const idx = Math.min(S.view.step ?? (q.stepsDone || 0), q.steps.length), s = q.steps[idx];
+  const key = `${t.id}:${q.id}:${idx}`;
+  if (S.sbx.key !== key) { prepareStep(t, q); render(); return; }
+  if (!s) return;
+  bindAsk(t, q, s);
+  if (s.kind === 'do') { bindDo(t, q, s, idx); return; }
+  if (s.kind === 'input') { bindInput(t, q, s, idx); return; }
+  const ed = $('#sql');
+  if (ed) {
+    ed.oninput = () => { S.sbx.draft = ed.value; setDraft(t, q, s, ed.value); };
+    ed.onkeydown = e => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); runStep(t, q, idx); }
+      if (e.key === 'Tab') { e.preventDefault(); const p = ed.selectionStart; ed.setRangeText('  ', p, ed.selectionEnd, 'end'); S.sbx.draft = ed.value; }
+    };
+  }
+  const on = (id, fn) => { const b = $('#' + id); if (b) b.onclick = fn; };
+  on('b-run', () => runStep(t, q, idx));
+  const file = $('#csv');
+  if (file) file.onchange = () => { const f = file.files[0]; if (!f) return; const rd = new FileReader(); rd.onload = () => useUpload(f.name, parseCsv(String(rd.result)), String(rd.result)); rd.readAsText(f); };
+  on('b-sample', () => sampleCsv(t.sandbox).then(d => useUpload(sampleName(t.sandbox), d)).catch(e => { console.error(e); S.sbx.feedback = { ok: false, msg: 'Couldn\'t load the sample file. Check your connection and try again.' }; render(); }));
+  on('b-hint', () => { S.sbx.hints++; sfx.flip(); render(); });
+  on('b-resetcode', () => { S.sbx.draft = s.starter || ''; setDraft(t, q, s, S.sbx.draft); S.sbx.feedback = null; render(); });
+  on('b-reveal', () => { S.sbx.draft = s.answer.replace(/ (FROM|WHERE|GROUP BY|HAVING|ORDER BY|LIMIT|UNION ALL|UNION|JOIN|ON|AND|WITH|SELECT|EXPLAIN|CREATE)\b/g, '\n$1').replace(/^\n/, ''); S.sbx.revealed = true; S.sbx.feedback = { ok: false, msg: 'Here\'s the answer. Read it line by line, then Run it. Steps cleared with the answer shown don\'t earn step XP.' }; render(); });
+  on('b-next', () => { S.view.step = idx + 1; S.quiz = {}; render(); window.scrollTo(0, 0); });
+}
+
+function runStep(t, q, idx) {
+  const s = q.steps[idx], sx = S.sbx, ed = $('#sql');
+  if (!sx.db || sx.loading) return;
+  const sql = (ed ? ed.value : sx.draft).trim(); sx.draft = sql;
+  if (!sql) { sx.feedback = { ok: false, msg: 'Type a query first.' }; render(); return; }
+  let res;
+  try { res = sx.db.exec(sql); } catch (e) {
+    if (/already exists/.test(e.message) && s.verify) {
+      let ok = false; try { ok = Number(lastResult(sx.db.exec(s.verify))?.values[0][0]) === 1; } catch (err) { ok = false; }
+      if (ok) { sx.out = ''; sx.feedback = { ok: true, msg: 'Your table is already there from your last run, and it is correct. Press Next step.' }; if (idx < (q.stepsDone || 0) || sx.passed) { sfx.pass(); render(); return; } clearStep(t, q, idx); return; }
+    }
+    sx.fails++; sx.out = ''; sx.feedback = { ok: false, msg: friendlyError(e.message) }; sfx.fail(); render(); return;
+  }
+  const r = lastResult(res); sx.out = tableHtml(r);
+  let verdict;
+  try {
+    if (s.contains) verdict = r && r.values.some(row => row.some(v => String(v).includes(s.contains)))
+      ? { ok: true, msg: `Correct. The plan says ${s.contains}.` } : { ok: false, msg: `Ran, but the result doesn't mention ${s.contains} yet.` };
+    else if (s.verify) { const v = lastResult(sx.db.exec(s.verify)); verdict = v && Number(v.values[0][0]) === 1 ? { ok: true, msg: 'Correct.' } : { ok: false, msg: 'Ran, but it doesn\'t do the mission yet. Check every column and value against the mission.' }; }
+    else if (s.matchSql) verdict = compare(r, lastResult(sx.db.exec(s.matchSql)), s.ordered);
+    else verdict = compare(r, SQLX.expected[sx.key], s.ordered);
+  } catch (e) { verdict = { ok: false, msg: /raw_results/.test(String(e.message)) ? 'Load your CSV first (or use the sample file).' : friendlyError(e.message) }; }
+  sx.feedback = verdict;
+  if (!verdict.ok) { sx.fails++; sfx.fail(); render(); return; }
+  clearStep(t, q, idx, { solved: { ...(q.solved || {}), [s.id]: sql } });
+}
+
+function clearStep(t, q, idx, extra) {
+  const s = q.steps[idx], sx = S.sbx;
+  sx.passed = true;
+  const fresh = idx === (q.stepsDone || 0);
+  if (!fresh) { sfx.pass(); render(); return; }
+  // Combo: steps cleared first time in a row (no fails, hints or shown answer). Bragging rights only, no XP.
+  S.combo = !sx.fails && !sx.hints && !sx.revealed ? (S.combo || 0) + 1 : 0;
+  guarded(async () => {
+    if (S.combo > (S.player.bestCombo || 0)) { await write('player/me', { bestCombo: S.combo }, !S.player.exists); S.player.bestCombo = S.combo; S.player.exists = true; }
+    const stepsDone = idx + 1, all = stepsDone >= q.steps.length;
+    const evidence = { ...(q.evidence || {}), [s.id]: { fails: sx.fails || 0, hints: sx.hints || 0, revealed: !!sx.revealed, on: today() } };
+    await applyQuest(t, q, { ...(extra || {}), evidence, stepsDone, ...(all ? { taskDone: true } : {}) }, true);
+    if (!sx.revealed) { const up = await award(q.stat || t.stat, XP.step, 'step', t.id, s.title); showUps(up); }
+    sfx.pass();
+    toast(all ? `All steps cleared${sx.revealed ? '' : ` +${XP.step} XP`}. Quiz unlocked.` : `Step cleared${sx.revealed ? '' : ` +${XP.step} XP`}`);
+    render();
+  });
+}
+
+function bindDo(t, q, s, idx) {
+  const sx = S.sbx, on = (id, fn) => { const b = $('#' + id); if (b) b.onclick = fn; };
+  document.querySelectorAll('input[name="chk"]').forEach(r => r.onchange = () => { sx.chk = Number(r.value); sx.feedback = null; });
+  const repo = $('#repo'); if (repo) repo.oninput = () => { sx.repo = repo.value.trim(); };
+  on('b-next', () => { S.view.step = idx + 1; S.quiz = {}; render(); window.scrollTo(0, 0); });
+  on('b-zip', () => downloadProject(t));
+  on('b-check', () => {
+    if (sx.chk === undefined) { sx.feedback = { ok: false, msg: 'Pick an answer first.' }; render(); return; }
+    if (sx.chk !== s.check.answer) { sx.fails = (sx.fails || 0) + 1; sx.feedback = { ok: false, msg: 'Not quite. Read the step again and have another go.' }; sfx.fail(); render(); return; }
+    if (s.action === 'repoUrl') {
+      const url = (sx.repo || t.repoUrl || '').replace(/\/$/, '');
+      if (!/^https:\/\/github\.com\/[\w.-]+\/[\w.-]+$/.test(url)) { sx.feedback = { ok: false, msg: `Right answer, but paste your repo link first. It looks like https://github.com/your-name/${shipSlug(t)}` }; render(); return; }
+      guarded(() => write('topics/' + t.id, { repoUrl: url })).then(() => { sx.feedback = { ok: true, msg: `Correct. ${s.check.why}` }; clearStep(t, q, idx); });
+      return;
+    }
+    sx.feedback = { ok: true, msg: `Correct. ${s.check.why}` };
+    clearStep(t, q, idx);
+  });
+}
+
+// ---------- ship: pack the boss-fight queries into a repo-ready zip ----------
+// Optional per-round titles and questions for the report. Empty: each boss step's title and mission are used.
+const SHIP_ROUNDS = [];
+// Folder, zip and repo name from the topic id, e.g. "sql-basics" -> sql-basics-project.
+const shipSlug = t => `${String(t?.id || t?.title || 'my').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'my'}-project`;
+const mdTable = r => !r ? '_No rows._' : [`| ${r.columns.join(' | ')} |`, `|${r.columns.map(() => ' --- ').join('|')}|`, ...r.values.map(v => `| ${v.map(x => x === null ? '' : String(x)).join(' | ')} |`)].join('\n');
+function bossQueries(t) {
+  const boss = (t.quests || []).find(x => x.boss);
+  if (!boss) return [];
+  return boss.steps.map((st, i) => ({ title: SHIP_ROUNDS[i]?.[0] || st.title, question: SHIP_ROUNDS[i]?.[1] || st.goal, sql: (boss.solved || {})[st.id] || getDraft(t, boss, st) || st.answer }));
+}
+async function downloadProject(t) {
+  const sx = S.sbx; if (sx.zipping) return;
+  sx.zipping = true; sx.zipped = ''; render();
+  try {
+    const dl = await window.claude?.use?.('downloads');
+    if (!dl) throw { code: 'unavailable' };
+    if (!window.JSZip) await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js');
+    const db = await freshDb({ ...t.sandbox }), ship = (t.quests || []).find(x => x.ship) || {}, files = ship.shipFiles || {};
+    const qs = bossQueries(t), name = t.project || t.title, slug = shipSlug(t);
+    const src = (t.sources || []).length ? t.sources : t.sourceUrl ? [{ title: t.sourceTitle || t.sourceUrl, url: t.sourceUrl }] : [];
+    const pretty = sql => sql.trim().replace(/;?\s*$/, ';');
+    const report = [`-- ${name}`, '-- Runs against data.db (SQLite). Open it in DB Browser for SQLite, then Execute SQL.', ...(t.dataSource ? [`-- Data: ${t.dataSource}`] : []), '',
+      ...qs.flatMap((x, i) => [`-- ${i + 1}. ${x.title}: ${String(x.question || '').replace(/\s+/g, ' ')}`, pretty(x.sql), ''])].join('\n');
+    const results = qs.map((x, i) => { let r = null; try { r = lastResult(db.exec(x.sql)); } catch (e) { /* shown as no rows */ }
+      return `### ${i + 1}. ${x.title}\n\n${x.question}\n\n${mdTable(r)}\n\n**Your take:** _one sentence on what this shows._`; }).join('\n\n');
+    const skills = (t.quests || []).filter(x => !x.boss && !x.ship && !x.mixed).map(x => `- ${x.title}`).join('\n');
+    const readme = `# ${name}
+
+${t.mission?.why || `${t.title}, analysed in SQL (SQLite).`}
+
+## Questions
+
+${qs.map((x, i) => `${i + 1}. ${x.question}`).join('\n')}
+
+## Results
+
+${results}
+
+## How to run it
+
+1. Open \`data.db\` in [DB Browser for SQLite](https://sqlitebrowser.org/).
+2. Go to **Execute SQL**, open \`report.sql\` and run it.
+
+## What's in here
+
+| File | What it does |
+| --- | --- |
+| \`report.sql\` | The analysis queries |
+| \`data.db\` | The data, as a SQLite database |
+${Object.keys(files).map(f => `| \`${f}\` | Part of the project |`).join('\n')}
+
+## Skills used
+
+${skills || '- SQL'}
+
+## Data
+
+${t.dataSource || 'Public or made-up data from the course.'}${src.length ? `\n\nSources: ${src.map(x => `[${x.title}](${x.url})`).join(', ')}` : ''}
+`;
+    const zip = new window.JSZip(), dir = zip.folder(slug);
+    dir.file('README.md', readme); dir.file('report.sql', report);
+    for (const [fname, body] of Object.entries(files)) dir.file(fname, body);
+    dir.file('data.db', db.export());
+    db.close();
+    const blob = await zip.generateAsync({ type: 'blob' });
+    await dl.save({ filename: `${slug}.zip`, data: blob });
+    sx.zipped = 'Saved. Find it in your Downloads folder, right-click, Extract All.';
+    sfx.card();
+  } catch (e) {
+    console.error(e);
+    sx.zipped = e && e.code === 'declined' ? 'Download cancelled. Press the button again when you\'re ready.'
+      : e && e.code === 'rate_limited' ? 'A save prompt is already open. Finish that one first.'
+      : 'Downloads aren\'t available in this view. Open the page on claude.ai in a browser and try again.';
+  } finally { sx.zipping = false; render(); }
+}
+
+// ---------- actions ----------
+let busy = false;
+async function guarded(fn) {
+  if (busy) return; busy = true;
+  try { await fn(); } catch (e) { if (e.message !== 'no db') toast('Couldn\'t save that. Try again in a moment.'); console.error(e); }
+  finally { busy = false; }
+}
+
+// Saves a quest patch; clears the quest when task + quiz are both done.
+async function applyQuest(t, q, patch, quiet) {
+  const quests = (t.quests || []).map(x => x.id === q.id ? { ...x, ...patch } : x);
+  const nq = quests.find(x => x.id === q.id);
+  const cleared = !nq.completedOn && nq.taskDone && (nq.quizBest || 0) >= passMark((nq.quiz || []).length);
+  if (cleared) nq.completedOn = today();
+  await write('topics/' + t.id, { quests });
+  t.quests = quests;
+  if (!cleared) { if (patch.taskDone && !quiet) { sfx.card(); toast('Task done. Now prove it.'); } return; }
+  const up = await award(q.stat || t.stat, XP.quest, 'quest', t.id, q.title);
+  const banked = await markActive('quest');
+  for (const c of S.cards.filter(c => c.topic === t.id && c.quest === q.id && !c.due)) await write('cards/' + c.id, { due: addDays(1), gapIdx: 0 });
+  if (!S.topics.some(x => x.id === S.player.activeTopic && isActive(x))) { await write('player/me', { activeTopic: t.id }); S.player.activeTopic = t.id; }
+  const left = quests.filter(x => !x.completedOn).length, tier = tierOfMastery(S.stats.find(s => s.id === (q.stat || t.stat))?.mastery || 0);
+  celebrate({ kicker: q.boss ? 'Boss defeated' : 'Quest cleared', title: q.title, sub: `${banked ? 'Streak day banked. ' : ''}${left ? `${left} quest${left > 1 ? 's' : ''} left in ${t.title}.` : `${t.title} complete.`}`, xp: XP.quest, tier, confetti: true, ok: left ? 'Next' : 'Done' });
+  showUps(up);
+  if (q.boss) { showUps(await award(t.stat, XP.project, 'project', t.id, t.project || t.title)); celebrate({ kicker: 'Project shipped', title: t.project || t.title, sub: 'Real work on real data, ready to show people.', xp: XP.project, tier, confetti: true, ok: 'Legend' }); }
+  if (!left) { await write('topics/' + t.id, { status: 'done' }); showUps(await award(t.stat, XP.topic, 'topic', t.id, t.title)); celebrate({ kicker: 'Topic complete', title: t.title, xp: XP.topic, tier, sound: sfx.level, ok: 'Done' }); }
+  render();
+}
+
+function checkQuiz(t, q, form) {
+  const quiz = q.quiz || [];
+  const answers = quiz.map((_, i) => { const r = form.querySelector(`input[name="q${i}"]:checked`); return r ? Number(r.value) : null; });
+  if (answers.some(a => a === null)) { toast('Answer every question first.'); return; }
+  const score = answers.filter((a, i) => a === quiz[i].answer).length, pm = passMark(quiz.length);
+  const missed = answers.map((a, i) => a === quiz[i].answer ? null : i + 1).filter(Boolean);
+  const missP = missed.length && S.db ? logEvent('quizmiss', t.id, 0, `${q.id}: missed Q${missed.join(', Q')}`).catch(e => console.error(e)) : Promise.resolve();
+  S.quiz = { answers, checked: true, score };
+  render();
+  const firstPass = score >= pm && (q.quizBest || 0) < pm, flawless = score === quiz.length && (q.quizBest || 0) < quiz.length;
+  if (score < pm) { sfx.fail(); return; }
+  if (score <= (q.quizBest || 0)) { sfx.pass(); return; }
+  guarded(async () => {
+    await missP;
+    let up = { levelUp: null, rankUp: null };
+    if (firstPass) { up = await award(q.stat || t.stat, XP.quiz, 'quiz', t.id, q.title); sfx.pass(); }
+    if (flawless) { const u2 = await award(q.stat || t.stat, XP.flawless, 'flawless', t.id, q.title); up.levelUp = up.levelUp || u2.levelUp; up.rankUp = up.rankUp || u2.rankUp; toast(`Flawless. +${XP.flawless} XP bonus`); const fl = (S.player.flawless || 0) + 1; await write('player/me', { flawless: fl }); S.player.flawless = fl; }
+    await applyQuest(t, q, { quizBest: score });
+    if (!q.taskDone) { showUps(up); render(); }
+  });
+}
+
+function answerCard(got) {
+  const c = mixedDue()[0]; if (!c) return;
+  guarded(async () => {
+    const gapIdx = got ? Math.min((c.gapIdx || 0) + 1, GAPS.length - 1) : 0;
+    const due = addDays(got ? GAPS[gapIdx] : 1);
+    // A forgotten card gets a refresher lesson in the Quest Log until they read it.
+    const extra = got ? {} : { lapses: (c.lapses || 0) + 1, remind: true };
+    await write('cards/' + c.id, { gapIdx, due, lastOn: today(), ...extra });
+    Object.assign(c, { gapIdx, due }, extra);
+    S.view = { name: 'review', flipped: null }; render();
+    let up = null;
+    if (got) { up = await award(c.stat, XP.card, 'card', c.topic, ''); sfx.card(); const cg = (S.player.cardsGot || 0) + 1; await write('player/me', { cardsGot: cg }); S.player.cardsGot = cg; }
+    const banked = await markActive('card');
+    if (S.view.name === 'review') render();
+    if (banked) toast('3 cards done. Streak day banked.');
+    if (up) showUps(up);
+  });
+}
+
+// ---------- boot ----------
+function start(hot) {
+  if (hot && hot.view) { S.view = hot.view; S.quiz = hot.quiz || {}; }
+  render();
+  (async () => {
+    const db = await window.claude?.use?.('db');
+    if (!db) { S.loaded = true; render(); toast('Open this page signed in to load your progress.'); return; }
+    S.db = db;
+    window.claude.use('assets').then(a => { S.assets = a; if (a) render(); }).catch(() => {});
+    window.claude.use('sample').then(f => { S.sample = f; if (f) render(); }).catch(() => {});
+    let pending = 4;
+    const ready = () => { if (pending > 0 && --pending === 0) S.loaded = true; render(); };
+    const fail = e => { console.error(e); S.loaded = true; render(); };
+    db.doc('player/me').onSnapshot(s => { S.player = s.exists ? { exists: true, ...s.data() } : {}; ready(); }, fail);
+    db.collection('stats').onSnapshot(s => { S.stats = s.docs.map(d => ({ id: d.id, ...d.data() })); ready(); }, fail);
+    db.collection('topics').onSnapshot(s => { S.topics = s.docs.map(d => ({ id: d.id, ...d.data() })); ready(); }, fail);
+    db.collection('cards').onSnapshot(s => { S.cards = s.docs.map(d => ({ id: d.id, ...d.data() })); ready(); }, fail);
+    db.collection('requests').onSnapshot(s => { S.requests = s.docs.map(d => ({ id: d.id, ...d.data() })); if (S.loaded) render(); }, e => console.error(e));
+    db.collection('offers').onSnapshot(s => { S.offers = s.docs.map(d => ({ id: d.id, ...d.data() })); if (S.loaded) render(); }, e => console.error(e));
+    db.collection('trials').onSnapshot(s => { S.trials = s.docs.map(d => ({ id: d.id, ...d.data() })); if (S.loaded) render(); }, e => console.error(e));
+    db.doc('log/' + today().slice(0, 7)).onSnapshot(s => { S.log = s.exists ? (s.data().entries || []) : []; if (S.loaded) render(); }, e => console.error(e));
+  })();
+}
+window.claude?.hot?.snapshot?.(() => ({ view: S.view, quiz: S.quiz }));
+window.claude?.hot?.ready ? window.claude.hot.ready(start) : start(window.claude?.hot?.data ?? {});
+</script>
