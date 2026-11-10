@@ -1,10 +1,12 @@
 """Check a /learn topic pack and write the files that load it onto the Skill Tree.
 
-Usage: python -I -X utf8 build_pack.py <topic folder>
+Usage: python -I -X utf8 build_pack.py <topic folder> [--terms "a,b"]
 Reads <folder>/pack.json: {"topic": {...}, "cards": [...]} (shape in references/playbook.md).
 Exits 1 with a list of problems. On success writes, in the same folder:
   topic.json   the topics/<id> document
   writes.json  an ArtifactData batch: newStats (each with its ladder when a trials file exists) + topic + cards
+               + the gear set of every skill that isn't a preset (gear/<stat id>)
+--terms is the learner's privacy terms. They are checked against the names in the gear set.
 """
 import csv
 import json
@@ -13,6 +15,10 @@ import os
 import re
 import sqlite3
 import sys
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))  # -I leaves the script's folder off the path
+sys.dont_write_bytecode = True  # no __pycache__ in the kit folder
+import gear_check  # noqa: E402
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "..", ".."))
 LEARN = os.path.join(ROOT, "skill-tree")
@@ -142,6 +148,108 @@ def check_role_topic(t, folder):
     if not set(range(1, top + 1)) <= set(levels):
         bad("topic", f"role topics need trials for levels 1-{top} (1-3, or up to placementStart when it's 4) "
                      f"(<topic folder>/trials/{t.get('stat')}.json or skill-tree/trials/{t.get('stat')}.json)")
+
+
+def pack_stats(t):
+    """Every skill (stat) the pack names: {stat id: name}."""
+    stats = {t["stat"]: t.get("statName", t["stat"])} if t.get("stat") else {}
+    stats.update({q["stat"]: q.get("statName", q["stat"]) for q in t.get("quests", []) if q.get("stat")})
+    return stats
+
+
+def pack_crowns(t):
+    """The optional `crown` per stat: a preset id, or `own` to opt out of presets. Set on the topic or on a quest with its own stat."""
+    crowns = {q["stat"]: q["crown"] for q in t.get("quests", []) if q.get("stat") and q.get("crown")}
+    if t.get("stat") and t.get("crown"):
+        crowns[t["stat"]] = t["crown"]
+    return crowns
+
+
+def gear_colours(folder, skip):
+    """Glow colours already in use: the presets plus every other set in skill-tree/gear/ and the topic's gear/."""
+    used = []
+    for base in (os.path.join(LEARN, "gear"), os.path.join(folder, "gear")):
+        for name in sorted(os.listdir(base)) if os.path.isdir(base) else []:
+            if not name.endswith(".json") or name == f"{skip}.json":
+                continue
+            try:
+                colour = json.load(open(os.path.join(base, name), encoding="utf-8")).get("colour")
+            except (OSError, ValueError, AttributeError):
+                continue
+            if isinstance(colour, str) and gear_check.HEX.match(colour) and colour not in used:
+                used.append(colour)
+    return used
+
+
+def page_stats():
+    """Skills already on the learner's page, from the state copy (skill-tree/state/stats/<id>.json): {stat id: crown}."""
+    out, base = {}, os.path.join(LEARN, "state", "stats")
+    for name in sorted(os.listdir(base)) if os.path.isdir(base) else []:
+        if not name.endswith(".json"):
+            continue
+        try:
+            d = json.load(open(os.path.join(base, name), encoding="utf-8"))
+        except (OSError, ValueError):
+            continue
+        d = d.get("data", d) if isinstance(d, dict) else {}
+        out[name[:-5]] = d.get("crown") if isinstance(d, dict) else None
+    return out
+
+
+def check_gear(t, folder, terms):
+    """Every skill needs a gear set: a preset, or its own file that passes gear_check. Returns {stat id: set} to load."""
+    sets, crowns, stats = {}, pack_crowns(t), pack_stats(t)
+    for stat in stats:
+        crown = crowns.get(stat)
+        if crown is not None and crown != "own" and crown not in gear_check.PRESETS:
+            bad(f"gear {stat}", f"crown must be one of {', '.join(gear_check.PRESETS)}, or own")
+            return sets
+    # One preset dresses one skill on a page. Skills already on the page keep theirs: a skill in this pack that wants the
+    # same preset must opt out. Two skills in this pack: the first by the preset's id order, then by stat id, keeps it.
+    on_page = {k: v for k, v in page_stats().items() if k not in stats}
+    taken = {p: k for k, p in gear_check.resolve_presets(on_page.items()).items() if p}
+    won = gear_check.resolve_presets((s, crowns.get(s)) for s in stats)
+    for stat, name in stats.items():
+        crown = crowns.get(stat)
+        want = gear_check.preset_for(stat, name, crown)
+        if want:
+            other = taken.get(want) or next((k for k, p in won.items() if p == want and k != stat), None)
+            if other:
+                bad(f"gear {stat}", f"the {want} set is already used by the skill {other}, and one preset can dress only one skill on a page. "
+                                    f"{stat} needs its own set: set crown to \"own\" for {stat} in the pack and draw its 7 items in "
+                                    f"skill-tree/gear/{stat}.json (format in skill-tree/gear/README.md)")
+                continue
+            # A set file for a skill that uses a preset must be that preset's art, or the page and the folder disagree.
+            preset_path = os.path.join(LEARN, "gear", f"{want}.json")
+            for base in (os.path.join(folder, "gear"), os.path.join(LEARN, "gear")):
+                mine = os.path.join(base, f"{stat}.json")
+                if os.path.exists(mine) and os.path.exists(preset_path) and os.path.abspath(mine) != os.path.abspath(preset_path):
+                    try:
+                        diff = gear_check.compare(json.load(open(preset_path, encoding="utf-8")), json.load(open(mine, encoding="utf-8")))
+                    except ValueError as e:
+                        diff = [f"{os.path.basename(mine)} is not valid JSON: {e}"]
+                    for line in diff:
+                        bad(f"gear {stat}", f"{line}. {stat} uses the {want} preset, so delete {os.path.relpath(mine, ROOT)} "
+                                            f"or set crown to \"own\" to use it")
+            continue
+        # A preset id that opted out keeps its own set in the topic folder: skill-tree/gear/<id>.json is the preset itself.
+        bases = [os.path.join(folder, "gear")] + ([] if stat in gear_check.PRESETS else [os.path.join(LEARN, "gear")])
+        path = next((p for p in (os.path.join(b, f"{stat}.json") for b in bases) if os.path.exists(p)), None)
+        if not path:
+            bad(f"gear {stat}", f"no gear set. This skill has no preset, so draw its 7 items in skill-tree/gear/{stat}.json "
+                                "(format in skill-tree/gear/README.md)")
+            continue
+        try:
+            data = json.load(open(path, encoding="utf-8"))
+        except ValueError as e:
+            bad(f"gear {stat}", f"{os.path.basename(path)} is not valid JSON: {e}")
+            continue
+        found = gear_check.check(data, terms, gear_colours(folder, stat), stat)
+        for line in found:
+            bad(f"gear {stat}", line)
+        if not found:
+            sets[stat] = data
+    return sets
 
 
 def check_balance(where, items):
@@ -281,9 +389,14 @@ def trials(path):
 def main():
     if len(sys.argv) == 3 and sys.argv[1] == "--trials":
         return trials(os.path.abspath(sys.argv[2]))
-    if len(sys.argv) != 2:
+    try:
+        terms = gear_check._option(sys.argv, "--terms") or []
+    except ValueError as e:
+        sys.exit(f"{e}\n{__doc__}")
+    args = [a for i, a in enumerate(sys.argv[1:], 1) if a != "--terms" and sys.argv[i - 1] != "--terms"]
+    if len(args) != 1 or args[0].startswith("--"):
         sys.exit(__doc__ + "\n       python build_pack.py --trials <skill-tree/trials/stat.json>")
-    folder = os.path.abspath(sys.argv[1])
+    folder = os.path.abspath(args[0])
     pack = json.load(open(os.path.join(folder, "pack.json"), encoding="utf-8"))
     t, cards = pack["topic"], pack.get("cards", [])
     tid = os.path.basename(folder)
@@ -439,6 +552,7 @@ def main():
     check_guide(t)
     if t.get("fromRole"):
         check_role_topic(t, folder)
+    gear = check_gear(t, folder, terms)
     if len(t.get("trophies", [])) < len(quests):
         notes.append(f"{len(t.get('trophies', []))} trophies for {len(quests)} quests: aim for one per quest")
 
@@ -465,14 +579,18 @@ def main():
         else:
             q.setdefault("taskDone", False)
     json.dump(topic, open(os.path.join(folder, "topic.json"), "w", encoding="utf-8"), ensure_ascii=False)
-    stats = {t["stat"]: t["statName"], **{q["stat"]: q.get("statName", q["stat"]) for q in t["quests"] if q.get("stat")}}
+    stats, crowns = pack_stats(t), pack_crowns(t)
     writes = [{"op": "set", "collection": "topics", "doc_id": tid, "file_path": os.path.join(folder, "topic.json")}]
     writes += [{"op": "set", "collection": "cards", "doc_id": c["id"], "data": {
         "topic": tid, "quest": c["quest"], "stat": c.get("stat") or next((q.get("stat") for q in t["quests"] if q["id"] == c["quest"] and q.get("stat")), t["stat"]),
         "front": c["front"], "back": c["back"], "due": None, "gapIdx": 0}} for c in cards]
+    # A skill with no preset loads its own checked set as gear/<stat id>.
+    writes += [{"op": "set", "collection": "gear", "doc_id": k, "data": v} for k, v in gear.items()]
     new_stats = []
     for k, v in stats.items():
         data = {"name": v, "area": t.get("area", "job"), "xp": 0}
+        if crowns.get(k):
+            data["crown"] = crowns[k]
         spec = trials_spec(k, folder)
         # A brand new stat gets its ladder in the same set, so a later ladder update can't be lost or wiped.
         if spec and isinstance(spec.get("ladder"), list) and len(spec["ladder"]) == 7:
@@ -487,6 +605,8 @@ def main():
           f"{len(t.get('trophies', []))} trophies, {size // 1024} KB. Stats: {', '.join(stats)}.")
     print("Next, in this order: newStats set (skip ones that exist), ladder update for existing stats, trial docs, "
           "then writes (topic, then cards). Publish new data files first.")
+    if gear:
+        print(f"Gear: writes also holds the set for {', '.join(gear)} (gear/<stat id>). Load it with the topic.")
 
 
 if __name__ == "__main__":

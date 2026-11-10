@@ -86,7 +86,7 @@ The first time you open the page, you make your character. If your first topic i
 - **Quest Board:** skills your role needs. Accept one and Claude builds it on the next `/learn`.
 - **Request training:** add a link, a skill or a file on the page. Claude turns it into a topic.
 - **Trophies and levels:** you earn them as you go.
-- **Gear and Master crowns:** reach Champion to unlock gear for your character, and master a skill to earn its own crown.
+- **Item sets and inventory:** every skill has its own set of 7 items for your character. You earn one for each level you prove, up to a crown at level 7. Press the backpack button (next to the cog) to open your inventory. Tap an item to wear it and tap again to take it off. You can mix items from different skills. Locked items show what to pass. The Share card button saves a picture of your character.
 
 Type `/learn` in Claude Code any time to build what you've asked for, pick up where you left off, or add a topic. Give it a link or a skill name, like `/learn SQL basics`.
 
@@ -99,6 +99,20 @@ Type `/learn` in Claude Code any time to build what you've asked for, pick up wh
 - **Mac or Linux:** not supported.
 
 ## Getting updates
+
+- Open Claude Code in the folder and type `/learn update`.
+- Claude checks the kit's public home for a newer version: https://github.com/jamessimondswork-prog/skill-tree-kit
+- If there is one, Claude shows you the version and what changed, and asks first. It installs only if you say yes.
+- An install replaces Skill Tree kit files only. Your setup answers, progress, topics, trials and your own files are never touched. Old copies of the replaced files are kept in `skill-tree\state\update-backup`.
+- The check sends nothing about you. It only downloads the version number, the notes and the kit.
+- Be clear about what an update is: it comes from the kit's public repo and replaces the files that tell Claude how `/learn` works. Only say yes to a version you expect. Claude installs exactly the version you agreed to, never a newer one you haven't seen.
+- If you changed a kit file by hand, the update tells you which one it replaced and where your copy is.
+- No internet, or the site can't be reached? Claude says so and carries on with what you have.
+- Then Claude updates your page and tells you what changed.
+
+### Updating by zip
+
+This still works, and it's how you get to version 1.2.0 from an older version.
 
 - An update comes as two files: `update-N.txt` (what changed) and `update-N.zip` (only the changed files).
 - Unzip `update-N.zip` into the same work folder and say yes to replacing files. It only holds Skill Tree files, so your own files aren't touched. In Extract All, delete the last folder name so it extracts straight into your work folder. You should see `.claude` and `skill-tree` next to your own files.

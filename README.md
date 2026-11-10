@@ -24,7 +24,9 @@ The full guide is in [skill-tree/README.md](skill-tree/README.md).
 
 The current version is in [skill-tree/VERSION](skill-tree/VERSION). What changed in each version is in [skill-tree/UPDATE-NOTES.md](skill-tree/UPDATE-NOTES.md).
 
-To update, download the zip again, copy the two folders over your old ones (choose Replace), then type `/learn update` in Claude Code. Your page keeps its link and your progress.
+From 1.2.0, type `/learn update` in Claude Code. Claude checks this repo for a newer version, shows you what changed and installs it only if you say yes. Your page keeps its link and your progress.
+
+On 1.1.0 or older, download the zip again, copy the two folders over your old ones (choose Replace), then type `/learn update`.
 
 ## Licence
 

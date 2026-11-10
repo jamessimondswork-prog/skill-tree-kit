@@ -1,0 +1,168 @@
+{
+ "id": "ai-agents",
+ "name": "AI agents",
+ "colour": "#9b6bff",
+ "palette": {
+  "k": "#150f2b", "1": "#2c1d66", "2": "#5b3cc4", "3": "#9b6bff", "4": "#c4a8ff", "5": "#ece2ff",
+  "t": "#39e6ff", "T": "#1493b8", "m": "#5b6480", "n": "#a3aec9", "o": "#e3e9f7", "g": "#2b3050",
+  "p": "#ece6d6", "a": "#ffc857"
+ },
+ "items": [
+  {
+   "level": 1, "slot": "badge", "name": "Chip Pin", "x": 11, "y": 23,
+   "rows": [
+    ".n.n.n.",
+    ".22222.",
+    "n24542n",
+    ".25t52.",
+    "n24542n",
+    ".22222.",
+    ".n.n.n."
+   ]
+  },
+  {
+   "level": 2, "slot": "tool", "name": "Prompt Wand", "x": -4, "y": 25, "hand": [10, 3],
+   "rows": [
+    "............kk.",
+    "...........knmk",
+    "..........knmk.",
+    ".........k3mk..",
+    "........knmk...",
+    "....k..knmk....",
+    "...ktkknmk.....",
+    "..k343nmk......",
+    ".k34543k.......",
+    "kt45o54tk......",
+    ".k34543k.......",
+    "..k343k........",
+    "...ktk.........",
+    "....k.........."
+   ]
+  },
+  {
+   "level": 3, "slot": "face", "name": "Scan Visor", "x": 5, "y": 11,
+   "rows": [
+    "nggggggggggggggggn",
+    "n1122345tt5432211n",
+    ".g12234tttt43221g.",
+    "...gg23455432gg...",
+    "......gggggg......"
+   ]
+  },
+  {
+   "level": 4, "slot": "book", "name": "Agent Codex", "x": 31, "y": 3,
+   "rows": [
+    ".kkkkkkkkkk..",
+    "k14444444ook.",
+    "k133333333opk",
+    "ko355333553pk",
+    "k1355333553pk",
+    "k1333434333pk",
+    "k1333ttt333pk",
+    "k1333tot333pk",
+    "k1333ttt333pk",
+    "k1333434333pk",
+    "k1355333553pk",
+    "ko355333553pk",
+    "k133333333opk",
+    "k13333333oopk",
+    ".kpppppppppnk",
+    "..kkkkkkkkkk."
+   ]
+  },
+  {
+   "level": 5, "slot": "back", "name": "Circuit Wings", "x": -2, "y": 5,
+   "rows": [
+    "4..............................4",
+    "42............................24",
+    "412..........................214",
+    "412..........................214",
+    "4112........................2114",
+    ".412........................214.",
+    ".4112......................2114.",
+    ".4t12......................21t4.",
+    ".41t12....................21t14.",
+    "..4t12....................21t4..",
+    "..41t2....................2t14..",
+    "..411t....................t114..",
+    "..4111mmmmmmmmmmmmmmmmmmmm1114..",
+    "...411gggggggggggggggggggg114...",
+    ".t.411....................114.t.",
+    "t5t411....................114t5t",
+    ".t..41....................14..t.",
+    "....41....................14....",
+    "....41....................14....",
+    ".....4....................4....."
+   ],
+   "front": {
+    "x": 9, "y": 21,
+    "rows": [
+     "g........g",
+     "g........g",
+     "t........t",
+     "g........g",
+     "g........g",
+     "g........g",
+     "g........g",
+     "g........g"
+    ]
+   }
+  },
+  {
+   "level": 6, "slot": "pet", "name": "Helper Bot", "x": 30, "y": 25,
+   "rows": [
+    "......k......",
+    ".....kak.....",
+    "..kkkknkkkk..",
+    ".koooooooook.",
+    ".kogggggggnk.",
+    ".kogtgggtgnk.",
+    ".kogtgggtgnk.",
+    ".kogg343ggnk.",
+    ".knnnnnnnnmk.",
+    "..kkonnnmkk..",
+    "..kmo3t3nmk..",
+    "...konnnmk...",
+    "..kmmkkkmmk..",
+    "...kk...kk..."
+   ],
+   "blink": [
+    "......k......",
+    ".....kak.....",
+    "..kkkknkkkk..",
+    ".koooooooook.",
+    ".kogggggggnk.",
+    ".kogggggggnk.",
+    ".kog1ggg1gnk.",
+    ".kogg343ggnk.",
+    ".knnnnnnnnmk.",
+    "..kkonnnmkk..",
+    "..kmo3t3nmk..",
+    "...konnnmk...",
+    "..kmmkkkmmk..",
+    "...kk...kk..."
+   ]
+  },
+  {
+   "level": 7, "slot": "crown", "name": "Crown of Agents", "x": 4, "y": -10,
+   "gems": [[9, 1], [10, 1], [9, 2], [10, 2], [1, 4], [18, 4], [5, 5], [14, 5], [3, 11], [6, 11], [9, 11], [10, 11], [13, 11], [16, 11]],
+   "rows": [
+    ".........kk.........",
+    "........kttk........",
+    ".......k3553k.......",
+    ".k.....k3443k.....k.",
+    "ktk..k..k33k..k..ktk",
+    "knk.ktkkonnmkktk.knk",
+    "knk.knkkonnmkknk.knk",
+    "konkknkkonnmkknkknmk",
+    "konnkonkonnmknmknnmk",
+    "konnnonnonnmnnmnnnmk",
+    "kooooooooooooooooook",
+    "knn3nntnn35nntnn3nnk",
+    "knn2nnTnn23nnTnn2nnk",
+    "kmmmmmmmmmmmmmmmmmmk",
+    ".kkkkkkkkkkkkkkkkkk."
+   ]
+  }
+ ]
+}

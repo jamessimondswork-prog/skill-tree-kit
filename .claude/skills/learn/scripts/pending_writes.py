@@ -5,7 +5,7 @@
   python -I -X utf8 pending_writes.py done <pending file> <count> (drops the first <count> writes once they landed)
 
 The file is {"writes": [{"op": "set" | "update", "collection": "...", "doc_id": "...", "data": {...}}]}, in the
-write order: stats sets, stats ladder updates, trials, topics, cards, offers, requests.
+write order: stats sets, stats ladder updates, trials, topics, cards, gear sets, offers, requests.
 
 `next` never asks you to paste a big document. A single write's data goes to a learner-local file,
 skill-tree/state/load-<collection>-<doc_id>.json, and the call uses file_path. A run of card writes goes
@@ -20,7 +20,7 @@ import sys
 
 USAGE = "usage: pending_writes.py check <file> | next <file> | done <file> <count>"
 OPS = ("set", "update")
-ORDER = {("stats", "set"): 0, ("stats", "update"): 1, "trials": 2, "topics": 3, "cards": 4, "offers": 5, "requests": 6}
+ORDER = {("stats", "set"): 0, ("stats", "update"): 1, "trials": 2, "topics": 3, "cards": 4, "gear": 5, "offers": 6, "requests": 7}
 SAFE = re.compile(r"[^A-Za-z0-9_-]+")
 
 
@@ -61,9 +61,9 @@ def check(doc):
             p.append("%s: data must be a non-empty object" % tag)
         r = rank(w)
         if r is None:
-            p.append("%s: unknown collection (stats, trials, topics, cards, offers, requests)" % tag)
+            p.append("%s: unknown collection (stats, trials, topics, cards, gear, offers, requests)" % tag)
         elif r < last:
-            p.append("%s: out of order (stats sets, ladder updates, trials, topic, cards, offers, requests)" % tag)
+            p.append("%s: out of order (stats sets, ladder updates, trials, topic, cards, gear sets, offers, requests)" % tag)
         else:
             last = r
     return p
