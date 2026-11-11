@@ -1509,7 +1509,7 @@ function trialView() {
     const climb = pass && T.placement && S.trials.some(x => x.stat === T.stat && x.level === T.level + 1) && ((tp?.placement || {})[T.level + 1] || tp?.fromRole);
     return `<button class="back ghost" id="b-home">← Skill Tree</button>${head}
       <div class="card"><p class="result ${pass ? 'pass' : 'fail'}">${T.score} of ${T.picks.length}. ${pass ? `Passed. You're rated ${esc(lad?.name || '')}.` : T.placement ? `Pass mark is ${trialPass(T, d)}. That's your starting point: your quests begin here.` : `Not this time. Pass mark is ${d.passMark}. Retry tomorrow.`}</p>
-        <div class="tres">${T.picks.map((p, i) => `<div><b class="${T.results[i] ? 'ok' : 'no'}">${T.results[i] ? '✓' : '✗'}</b><span>${prose(p.goal || p.q).replace(/^<p>|<\/p>$/g, '')}</span></div>`).join('')}</div>
+        <div class="tres">${T.picks.map((p, i) => `<div><b class="${T.results[i] ? 'ok' : 'no'}">${T.results[i] ? '✓' : '✗'}</b><span>${prose(p.goal || p.q).replace(/^<p>|<\/p>$/g, '')}${T.typed?.[i] ? `<br><small class="why">${p.kind === 'choice' ? 'You picked' : 'You typed'}: ${esc(T.typed[i])}</small>` : ''}</span></div>`).join('')}</div>
         ${pass ? '' : '<p class="why">Answers stay hidden so the trial stays fair. Review the quests for the ones you missed.</p>'}
         ${pass && T.placement ? `<p class="why">Placed out of the quests this level covers. They stay replayable.</p>` : ''}
         <div class="acts">${climb
@@ -1562,7 +1562,7 @@ async function startTrial() {
   const shuf = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
   const n = trialPick(T, d), unseen = shuf(d.problems.filter(p => p.unseen)), need = (d.level || T.level) >= 3 ? Math.min(unseen.length, Math.ceil(n / 2)) : 0;
   const picks = shuf([...unseen.slice(0, need), ...shuf([...unseen.slice(need), ...d.problems.filter(p => !p.unseen)]).slice(0, n - need)]);
-  Object.assign(T, { phase: 'run', picks, idx: 0, results: [], ends: Date.now() + trialMinutes(T, d) * 60000, draft: '', out: '', err: '', loading: !!topic });
+  Object.assign(T, { phase: 'run', picks, idx: 0, results: [], typed: [], ends: Date.now() + trialMinutes(T, d) * 60000, draft: '', out: '', err: '', loading: !!topic });
   clearInterval(trialTimer);
   trialTimer = setInterval(() => {
     if (S.trial?.phase !== 'run') { clearInterval(trialTimer); return; }
@@ -1582,19 +1582,19 @@ function runTrialSql(sql) {
 }
 function lockTrial() {
   const T = S.trial, p = T.picks[T.idx];
-  let ok = false;
-  if (p.kind === 'choice') { if (T.chk === undefined) { toast('Pick an answer first.'); return; } ok = T.chk === p.answer; }
+  let ok = false, typed = '';
+  if (p.kind === 'choice') { if (T.chk === undefined) { toast('Pick an answer first.'); return; } ok = T.chk === p.answer; typed = (p.options || [])[T.chk] || ''; }
   else if (p.kind === 'input') {
     const v = ($('#tans')?.value || T.draft || '').trim();
     if (!v) { toast('Type your answer first.'); return; }
-    ok = (p.accept || []).some(a => normAns(a) === normAns(v));
+    typed = v; ok = ansOk(p.accept, v);
   } else {
     const sql = ($('#tsql')?.value || T.draft || '').trim();
     if (!sql) { toast('Write a query first.'); return; }
     const r = runTrialSql(sql);
     if (r !== undefined) { try { ok = compare(r, lastResult(T.ans.exec(p.answer)), p.ordered).ok; } catch (e) { ok = false; } }
   }
-  T.results.push(ok); T.idx++; T.draft = ''; T.out = ''; T.err = ''; T.chk = undefined;
+  T.results.push(ok); (T.typed = T.typed || []).push(typed); T.idx++; T.draft = ''; T.out = ''; T.err = ''; T.chk = undefined;
   sfx.flip();
   if (T.idx >= T.picks.length) finishTrial(); else { render(); window.scrollTo(0, 0); }
 }
@@ -1614,7 +1614,7 @@ function finishTrial() {
   const st = S.stats.find(x => x.id === T.stat), pass = T.score >= trialPass(T, d), lad = st.ladder?.[T.level - 1];
   render();
   guarded(async () => {
-    await logEvent('trialresult', T.placement || null, 0, `${st.id} L${T.level}${T.placement ? ' placement' : ''}: ${T.picks.map((p, i) => p.id + (T.results[i] ? ' ok' : ' missed')).join(', ')}`);
+    await logEvent('trialresult', T.placement || null, 0, `${st.id} L${T.level}${T.placement ? ' placement' : ''}: ${T.picks.map((p, i) => p.id + (T.results[i] ? ' ok' : ' missed' + (T.typed?.[i] ? ' "' + String(T.typed[i]).replace(/\s+/g, ' ').slice(0, 60) + '"' : ''))).join(', ')}`);
     if (T.placement) await markPlacementDone(T.placement);
     if (pass) {
       await write('stats/' + st.id, { mastery: T.level, masteryOn: today() });
@@ -2084,13 +2084,55 @@ function inputStepCard(t, q, s, idx, cleared) {
       ${s.answerSql && (sx.revealed || cleared || sx.passed) ? `<span class="label">One way to write it</span><div class="prose">${prose('```\n' + s.answerSql + '\n```')}</div>` : ''}</div>`;
 }
 const normAns = v => String(v || '').normalize('NFD').replace(/\p{M}/gu, '').toLowerCase().replace(/[^\p{L}\p{N}\s]/gu, '').replace(/\s+/g, ' ').trim();
+// ANS BLOCK (1.2.1): fair marking for typed answers. A right answer still counts with filler words ("pattern", "tokens"),
+// up to 2 extra words, or a small typo in a long word. Numbers must match exactly. A hedge ("x or y"), a "not", or an
+// extra number never passes.
+const ANS_FILLER = new Set(['the', 'a', 'an', 'its', 'it', 'is', 'pattern', 'patterns', 'token', 'tokens', 'approach', 'method', 'by', 'using', 'with', 'via', 'about', 'around', 'roughly', 'approx', 'approximately', 'answer']);
+const ANS_NEG = new Set(['not', 'no', 'never', 'isnt', 'dont', 'doesnt', 'wont', 'cant']);
+const ansToks = v => String(v || '').normalize('NFD').replace(/\p{M}/gu, '').toLowerCase().replace(/[\-‐-―_\/]/g, ' ').replace(/[^\p{L}\p{N}\s]/gu, '').split(/\s+/).filter(Boolean);
+function ansDist(a, b) {
+  const d = Array.from({ length: a.length + 1 }, (_, i) => [i, ...Array(b.length).fill(0)]);
+  for (let j = 1; j <= b.length; j++) d[0][j] = j;
+  for (let i = 1; i <= a.length; i++) for (let j = 1; j <= b.length; j++) {
+    d[i][j] = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+    if (i > 1 && j > 1 && a[i - 1] === b[j - 2] && a[i - 2] === b[j - 1]) d[i][j] = Math.min(d[i][j], d[i - 2][j - 2] + 1);
+  }
+  return d[a.length][b.length];
+}
+const ansNum = w => /\d/.test(w);
+function ansWord(w, a) {
+  if (w === a) return true;
+  if (ansNum(w) || ansNum(a)) return false;
+  const lim = a.length >= 10 ? 2 : a.length >= 6 ? 1 : 0;
+  return lim > 0 && Math.abs(w.length - a.length) <= lim && ansDist(w, a) <= lim;
+}
+function ansOk(accept, v) {
+  const list = (accept || []).map(String);
+  if (list.some(a => normAns(a) === normAns(v))) return true;
+  const raw = ansToks(v);
+  if (!raw.length || raw.includes('or')) return false;
+  const strip = t => { const s = t.filter(w => !ANS_FILLER.has(w)); return s.length ? s : t; };
+  const typed = strip(raw);
+  return list.some(a => {
+    const at = strip(ansToks(a));
+    if (!at.length || typed.length < at.length || typed.length - at.length > 2) return false;
+    if (typed.some(w => ANS_NEG.has(w)) && !at.some(w => ANS_NEG.has(w))) return false;
+    for (let s = 0; s + at.length <= typed.length; s++) {
+      if (!at.every((w, k) => ansWord(typed[s + k], w))) continue;
+      const extra = [...typed.slice(0, s), ...typed.slice(s + at.length)];
+      if (!extra.some(ansNum)) return true;
+    }
+    return false;
+  });
+}
+// END ANS BLOCK
 function bindInput(t, q, s, idx) {
   const sx = S.sbx, on = (id, fn) => { const b = $('#' + id); if (b) b.onclick = fn; };
   const ans = $('#ans');
   const check = () => {
     const v = (ans ? ans.value : sx.draft) || ''; sx.draft = v;
     if (!v.trim()) { sx.feedback = { ok: false, msg: 'Type an answer first.' }; render(); return; }
-    if ((s.accept || []).some(a => normAns(a) === normAns(v))) { sx.feedback = { ok: true, msg: s.why ? `Correct. ${s.why}` : 'Correct.' }; clearStep(t, q, idx); return; }
+    if (ansOk(s.accept, v)) { sx.feedback = { ok: true, msg: s.why ? `Correct. ${s.why}` : 'Correct.' }; clearStep(t, q, idx); return; }
     sx.fails = (sx.fails || 0) + 1; sx.feedback = { ok: false, msg: 'Not quite. Check the spelling and try again, or take a hint.' }; sfx.fail(); render();
   };
   if (ans) { ans.oninput = () => { sx.draft = ans.value; }; ans.onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); check(); } }; }

@@ -52,7 +52,7 @@ A topic is ready when all of this is true. `build_pack.py` checks the parts mark
 | kind | Use for | Clears when |
 |---|---|---|
 | `sql` (default) | Writing queries in the page sandbox | Result matches (see checks) |
-| `input` | Languages, definitions, short answers, numbers, formulas in a real spreadsheet (they type the value their formula returns, as in the worked example) | Typed answer matches any of `accept` (case, accents, punctuation ignored) |
+| `input` | Languages, definitions, short answers, numbers, formulas in a real spreadsheet (they type the value their formula returns, as in the worked example) | Typed answer matches any of `accept` (case, accents, punctuation ignored). Since 1.2.1 the page also passes a right answer with filler words ("pattern", "tokens"), up to 2 extra words, or a small typo in a long word. Numbers must match exactly, and "x or y", "not x" or an extra number fail. Still list close names in `accept` (e.g. `majority vote` next to `voting`) |
 | `input` + `answerSql` | SQL written in a real tool (e.g. pgAdmin). They type what their query returned | Same as `input`. Show answer also shows `answerSql`. Work `accept` out by running `answerSql` on the same data in a script (e.g. SQLite from the CSVs in `gen_pack.py`), never by hand, and check for ties before asking "which one" |
 | `do` | Things done outside the page: install, sign up, GitHub, a desktop tool | Check question answered right |
 

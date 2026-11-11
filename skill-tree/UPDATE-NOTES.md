@@ -2,6 +2,17 @@
 
 Newest first. `/learn update` reads this file after an update is installed (fetched by `/learn update` itself, or unzipped into your work project folder). Each entry says what changed and what `/learn update` has to do.
 
+## 1.2.1 (fairer marking for typed answers)
+
+- Typed answers in trials and quest steps are marked more fairly. A right answer still counts with filler words ("orchestrator-workers pattern", "12,400 tokens"), up to 2 extra words ("majority vote"), or a small typo in a long word ("parralelisation"). Numbers must still match exactly, and a hedge ("5 or 6"), a "not" or an extra number never passes.
+- After a trial, each problem shows what you typed or picked. Answers stay hidden. The trial log now saves what you typed for each missed problem, so `/learn` can see where you went wrong.
+- Page: republish (Update mode step 2).
+- Capabilities: no change.
+- Data steps: none.
+- Index: no change.
+- Checker (`build_pack.py`): no change.
+- `lastUpdate`: Update mode step 5 sets it to `1.2.1` in `setup.json` once the republish worked.
+
 ## 1.2.0 (item sets, inventory and auto-update)
 
 - New on your page: every skill now has its own set of 7 items for your character. You earn one per level you prove in that skill: chest badge (1), tool (2), face piece (3), book (4), back item (5), companion (6) and crown (7). The last four have effects in the skill's own colour.
